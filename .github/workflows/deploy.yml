@@ -31,4 +31,4 @@ jobs:
             - run: npm i
             - run: npm run build
             - run: sudo rm -rf /var/www/html/dealio.financial
-            - run: mv /home/ubuntu/web-runner/dealio-frontend/Dealio-Web/Dealio-Web/dist /var/www/html/dealio.financial
+            - run: sudo mv /home/ubuntu/web-runner/dealio-frontend/Dealio-Web/Dealio-Web/dist /var/www/html/dealio.financial
