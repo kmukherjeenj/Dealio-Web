@@ -1,4 +1,8 @@
-import { useState } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { toast } from 'react-toastify';
+import { useState, useEffect } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { useDispatch, useSelector } from 'react-redux';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -14,6 +18,9 @@ import { alpha, useTheme } from '@mui/material/styles';
 
 import { useRouter } from 'src/routes/hooks';
 
+import { validateEmail } from 'src/utils/validate';
+
+import { sendOTP } from 'src/api/server';
 import { bgGradient } from 'src/theme/css';
 
 import Logo from 'src/components/logo';
@@ -22,18 +29,44 @@ import Iconify from 'src/components/iconify';
 
 export default function LoginView() {
     const theme = useTheme();
+    const dispatch = useDispatch();
+    const loading = useSelector((state) => state.loading);
+    const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState(false);
     const [selected, setSelected] = useState(false);
 
     const router = useRouter();
 
+    useEffect(() => {
+        if (email && !validateEmail(email)) {
+            setEmailError(true);
+        } else {
+            setEmailError(false);
+        }
+    }, [email]);
+
     const handleClick = () => {
-        router.push('/verify');
+        sendOTP(dispatch, { email })
+            .then((res) => {
+                router.push('/verify');
+            })
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
     };
 
     const renderForm = (
         <>
             <Stack spacing={3}>
-                <TextField name="email" label="Email address" />
+                <TextField
+                    name="email"
+                    label="Email address"
+                    value={email}
+                    onChange={(e) => {
+                        setEmail(e.target.value);
+                    }}
+                    error={emailError}
+                />
             </Stack>
 
             <Stack direction="row" alignItems="center" sx={{ my: 3 }}>
@@ -52,7 +85,16 @@ export default function LoginView() {
                 </Link>
             </Stack>
 
-            <LoadingButton fullWidth size="large" type="submit" variant="contained" color="inherit" onClick={handleClick}>
+            <LoadingButton
+                fullWidth
+                size="large"
+                type="submit"
+                variant="contained"
+                loading={loading}
+                disabled={!selected || !email}
+                color="inherit"
+                onClick={handleClick}
+            >
                 Login
             </LoadingButton>
             <Divider sx={{ my: 2 }}>
@@ -60,7 +102,7 @@ export default function LoginView() {
                     OR
                 </Typography>
             </Divider>
-            <Button fullWidth size="large" color="inherit" variant="outlined" sx={{ borderColor: alpha(theme.palette.grey[500], 0.16) }}>
+            <Button fullWidth size="large" color="inherit" variant="outlined" disabled={!selected} sx={{ borderColor: alpha(theme.palette.grey[500], 0.16) }}>
                 <Iconify icon="eva:google-fill" color="#DF3E30" />
                 <Typography variant="body2" sx={{ color: 'text.secondary', ml: 1 }}>
                     Continue with Google

@@ -1,10 +1,14 @@
-import { lazy, Suspense } from 'react';
-import { Outlet, Navigate, useRoutes } from 'react-router-dom';
+/* eslint-disable import/no-extraneous-dependencies */
+import { useSelector } from 'react-redux';
+import { lazy, Suspense, useEffect } from 'react';
+import { Route, Outlet, Routes, Navigate, BrowserRouter } from 'react-router-dom';
 
+import { HTTPS } from 'src/api/constant';
 import DashboardLayout from 'src/layouts/dashboard';
 
 export const IndexPage = lazy(() => import('src/pages/app'));
 export const DealsPage = lazy(() => import('src/pages/deals'));
+export const DealPage = lazy(() => import('src/pages/deal'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const LoginPage = lazy(() => import('src/pages/login'));
@@ -15,46 +19,50 @@ export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 // ----------------------------------------------------------------------
 
-export default function Router() {
-    const routes = useRoutes([
-        {
-            element: (
-                <DashboardLayout>
-                    <Suspense>
-                        <Outlet />
-                    </Suspense>
-                </DashboardLayout>
-            ),
-            children: [
-                { element: <IndexPage />, index: true },
-                { path: 'dashboard', element: <IndexPage /> },
-                { path: 'deals', element: <DealsPage /> },
-                { path: 'user', element: <UserPage /> },
-                { path: 'products', element: <ProductsPage /> },
-                { path: 'blog', element: <BlogPage /> },
-            ],
-        },
-        {
-            path: 'login',
-            element: <LoginPage />,
-        },
-        {
-            path: 'verify',
-            element: <VerifyPage />,
-        },
-        {
-            path: 'edit-account',
-            element: <EditAccountPage />,
-        },
-        {
-            path: '404',
-            element: <Page404 />,
-        },
-        {
-            path: '*',
-            element: <Navigate to="/404" replace />,
-        },
-    ]);
+const DashLayout = () => {
+    const authed = useSelector((state) => state.authed);
 
-    return routes;
+    if (!authed) {
+        return <Navigate to="/login" replace />;
+    }
+    return (
+        <DashboardLayout>
+            <Suspense>
+                <Outlet />
+            </Suspense>
+        </DashboardLayout>
+    );
+};
+
+export default function Router() {
+    const token = useSelector((state) => state.token);
+
+    useEffect(() => {
+        if (token) {
+            HTTPS.defaults.headers.common.Authorization = `Bearer ${token}`;
+        }
+    }, [token]);
+
+    return (
+        <Suspense>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<DashLayout />}>
+                        <Route path="/dashboard" element={<IndexPage />} />
+                        {/* <Route path="/deals" element={<DealsPage />} /> */}
+                        <Route path="/deal" element={<DealPage />} />
+                        {/* <Route path="/user" element={<UserPage />} /> */}
+                        {/* <Route path="/products" element={<ProductsPage />} /> */}
+                        {/* <Route path="/blog" element={<BlogPage />} /> */}
+                    </Route>
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="verify" element={<VerifyPage />} />
+                    <Route path="edit-account" element={<EditAccountPage />} />
+                    <Route path="*" element={<Page404 />} />
+                    {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
+                </Routes>
+            </BrowserRouter>
+        </Suspense>
+    );
 }
