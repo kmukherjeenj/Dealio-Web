@@ -30,3 +30,5 @@ jobs:
                   #   cache: 'npm'
             - run: npm i
             - run: npm run build
+            - run: rm -rf /var/www/html/dealio.financial
+            - run: mv /home/ubuntu/web-runner/dealio-frontend/Dealio-Web/Dealio-Web/dist /var/www/html/dealio.financial
