@@ -313,7 +313,7 @@ export default function DealView() {
                                     { id: 'title', label: 'Title' },
                                     { id: 'budget', label: 'Budget' },
                                     { id: 'duration', label: 'Duration' },
-                                    { id: 'company', label: 'Company', align: 'center' },
+                                    { id: 'company', label: 'Company' },
                                     { id: '' },
                                 ]}
                             />
@@ -321,6 +321,7 @@ export default function DealView() {
                                 {dataFiltered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                                     <DealTableRow
                                         key={row.id}
+                                        mainImage={row.mainImage}
                                         title={row.title}
                                         budget={`$${row.minMaxInvestmentAmount.min}-$${row.minMaxInvestmentAmount.max}`}
                                         duration={row.dealDuration}

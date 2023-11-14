@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 
+import { Avatar } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import Popover from '@mui/material/Popover';
 import TableRow from '@mui/material/TableRow';
@@ -14,7 +15,7 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function DealTableRow({ selected, title, budget, duration, company, handleClick }) {
+export default function DealTableRow({ selected, mainImage, title, budget, duration, company, handleClick }) {
     const [open, setOpen] = useState(null);
 
     const handleOpenMenu = (event) => {
@@ -32,8 +33,9 @@ export default function DealTableRow({ selected, title, budget, duration, compan
                     <Checkbox disableRipple checked={selected} onChange={handleClick} />
                 </TableCell>
 
-                <TableCell component="th" scope="row" padding="none">
+                <TableCell component="th" scope="row" padding="none" sx={{ cursor: 'pointer' }}>
                     <Stack direction="row" alignItems="center" spacing={2}>
+                        <Avatar alt={title} src={mainImage} />
                         <Typography variant="subtitle2" noWrap>
                             {title}
                         </Typography>
@@ -78,6 +80,7 @@ export default function DealTableRow({ selected, title, budget, duration, compan
 }
 
 DealTableRow.propTypes = {
+    mainImage: PropTypes.any,
     company: PropTypes.any,
     handleClick: PropTypes.func,
     duration: PropTypes.any,
