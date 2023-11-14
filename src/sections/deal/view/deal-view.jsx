@@ -154,25 +154,25 @@ export default function DealView() {
         else setErrDealDuration(false);
 
         if (
-            errTitle ||
-            errDesc ||
-            errBusinessPlan ||
-            errFundingGoal ||
-            errValuatin ||
-            errInvestmentType ||
-            errInvestmentTerms ||
-            errOwnershipPercentageOffered ||
-            errTermsAndConditions ||
-            errSecuritiesFilings ||
-            errRegulatoryComplianceDetails ||
-            errAttachmentName ||
-            errAttachmentUrl ||
-            errRisksAndDisclaimers ||
-            errDueDiligenceMaterials ||
-            errInvestorEligibilitys ||
-            errMinInvestmentAmount ||
-            errMaxInvestmentAmount ||
-            errDealDuration
+            !title ||
+            !description ||
+            !businessPlan ||
+            !fundingGoal ||
+            !valuation ||
+            !investmentType ||
+            !investmentTerms ||
+            !ownershipPercentageOffered ||
+            !termsAndConditions ||
+            !securitiesFilings ||
+            !regulatoryComplianceDetailss ||
+            !attachmentName ||
+            !attachmentUrl ||
+            !risksAndDisclaimers ||
+            !dueDiligenceMaterials ||
+            !investorEligibilitys ||
+            !minInvestmentAmount ||
+            !maxInvestmentAmount ||
+            !dealsDuration
         ) {
             toast('Please fill all required fields', { type: 'error' });
         } else {
@@ -433,14 +433,14 @@ export default function DealView() {
                             Separate by comma
                         </Typography>
                         <TextField
-                            name="investmentTerms"
+                            name="deelio"
                             required
                             multiline
                             rows={4}
                             error={errInvestmentTerms}
                             value={investmentTerms}
                             onChange={(e) => setInvestmentTerms(e.target.value)}
-                            label="Investment terms"
+                            label="Deelio"
                         />
                         <TextField
                             name="ownershipPercentageOffered"

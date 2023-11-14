@@ -5,6 +5,7 @@ const initialState = {
     token: '',
     user: {},
     deals: [],
+    users: [],
 };
 
 export default initialState;

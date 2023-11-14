@@ -1,4 +1,12 @@
 import { useState } from 'react';
+// ----------------------------------------------------------------------
+
+import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+// eslint-disable-next-line import/no-extraneous-dependencies
+// import { usePlacesWidget } from 'react-google-autocomplete';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import GooglePlacesAutocomplete from '@dylmye/mui-google-places-autocomplete';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -14,63 +22,74 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { useRouter } from 'src/routes/hooks';
 
+import { register } from 'src/api/server';
 import { bgGradient } from 'src/theme/css';
-import { DEAL_SIZE, GEOGRAPHIES, INVESTMENT_SIZE, INVESTMENT_STAGES, INVESTMENT_SECTORS } from 'src/_mock/account';
+import { INVESTOR_TYPE } from 'src/_mock/products';
 
 import Logo from 'src/components/logo';
-import Selector from 'src/components/selector';
-// ----------------------------------------------------------------------
+
+// const options = {
+//     componentRestrictions: { country: 'us' },
+//     fields: ['address_components', 'geometry', 'icon', 'name', 'formatted_address'],
+//     types: ['address'],
+// };
 
 export default function EditAccountView() {
     const theme = useTheme();
 
     const router = useRouter();
+    const dispatch = useDispatch();
 
-    const [accredited, setAccredited] = useState([]);
-    const [sectors, setSectors] = useState([]);
-    const [deals, setDeals] = useState([]);
-    const [investmentSize, setInvestmentSize] = useState([]);
-    const [investmentStages, setInvestmentStages] = useState([]);
-    const [geographies, setGeographies] = useState([]);
+    const email = useSelector((state) => state.email);
+    const loading = useSelector((state) => state.loading);
 
-    const onAddAccredited = (item) => {
-        setAccredited([item]);
-    };
+    const [firstName, setFirstName] = useState('');
+    const [errFirstName, setErrFirstName] = useState(false);
+    const [lastName, setLastName] = useState('');
+    const [errLastName, setErrLastName] = useState(false);
+    const [address, setAddress] = useState('');
+    const [errAddress, setErrAddress] = useState(false);
+    const [phone, setPhone] = useState('');
+    const [errPhone, setErrPhone] = useState(false);
+    const [companyName, setCompanyName] = useState('');
+    const [errCompanyName, setErrCompanyName] = useState(false);
+    const [investorType, setInvestorType] = useState([]);
+    const [errInvestorType, setErrInvestorType] = useState(false);
 
-    const onAddSectors = (item) => {
-        if (sectors.includes(item)) {
-            setSectors(sectors.filter((el) => el !== item));
+    const onSubmit = () => {
+        if (!firstName) setErrFirstName(true);
+        else setErrFirstName(false);
+        if (!lastName) setErrLastName(true);
+        else setErrLastName(false);
+        if (!address) setErrAddress(true);
+        else setErrAddress(false);
+        if (!phone) setErrPhone(true);
+        else setErrPhone(false);
+        if (!companyName) setErrCompanyName(true);
+        else setErrCompanyName(false);
+        if (investorType.length === 0) setErrInvestorType(true);
+        else setErrInvestorType(false);
+
+        if (!firstName || !lastName || !address || !phone || !companyName || investorType === 0) {
+            toast('Please fill all required fields', { type: 'error' });
         } else {
-            setSectors([...sectors, item]);
+            const data = {
+                firstName,
+                lastName,
+                address,
+                phone,
+                companyName,
+                investorType,
+                email,
+            };
+            register(dispatch, data)
+                .then((res) => {
+                    router.push('/dashboard');
+                })
+                .catch((err) => {
+                    toast(err, { type: 'error' });
+                });
         }
-    };
-
-    const onAddDeals = (item) => {
-        setDeals([item]);
-    };
-
-    const onAddInvestmentSize = (item) => {
-        setInvestmentSize([item]);
-    };
-
-    const onAddInvestmentStages = (item) => {
-        if (investmentStages.includes(item)) {
-            setInvestmentStages(investmentStages.filter((el) => el !== item));
-        } else {
-            setInvestmentStages([...investmentStages, item]);
-        }
-    };
-
-    const onAddGeographies = (item) => {
-        if (geographies.includes(item)) {
-            setGeographies(geographies.filter((el) => el !== item));
-        } else {
-            setGeographies([...geographies, item]);
-        }
-    };
-
-    const handleClick = () => {
-        router.push('/dashboard');
     };
 
     const renderForm = (
@@ -80,218 +99,89 @@ export default function EditAccountView() {
             </Typography>
 
             <Stack spacing={3} mb={4}>
-                <TextField name="email" label="Email" required placeholder="example@mail.com" />
-                <TextField name="firstName" label="First name" required placeholder="First name" />
-                <TextField name="lastName" label="Last name" required placeholder="Last name" />
-                <TextField name="whatsapp" label="WhatsApp / Mobile(+country-phone)" required placeholder="+country-phone" />
-                <TextField name="telegram" label="Telegram" required placeholder="@nickname" />
-                <Typography variant="caption" color="InactiveCaptionText">
-                    (N/A if not available), we use Telegram for community groups
-                </Typography>
-                <TextField name="linkedin" label="LinkedIn URL" required placeholder="Copy LinkedIn full URL" />
-                <TextField name="companyName" label="Company name" required placeholder="" />
-                <TextField name="jobTitle" label="Job title" placeholder="" />
+                <TextField name="email" label="Email" required value={email} disabled placeholder="example@mail.com" />
                 <TextField
-                    name="shortBio"
-                    label="Short Bio"
-                    multiline
-                    rows={4}
-                    placeholder="Your bio will be presented on your Investor Profile so other members could learn more about you and reach out"
+                    name="firstName"
+                    label="First name"
+                    required
+                    value={firstName}
+                    error={errFirstName}
+                    placeholder="First name"
+                    onChange={(e) => setFirstName(e.target.value)}
                 />
-                <TextField name="cityResidency" label="City of residency" required placeholder="" />
-                <TextField name="countryResidency" label="Country of residency" required placeholder="" />
-                <TextField name="visitedcities" label="What are your frequently visited cities?" placeholder="We can support you with introductions in these" />
+                <TextField
+                    name="lastName"
+                    label="Last name"
+                    required
+                    value={lastName}
+                    error={errLastName}
+                    placeholder="Last name"
+                    onChange={(e) => setLastName(e.target.value)}
+                />
+                <TextField
+                    name="whatsapp"
+                    label="WhatsApp / Mobile"
+                    required
+                    value={phone}
+                    error={errPhone}
+                    placeholder=""
+                    onChange={(e) => setPhone(e.target.value)}
+                />
+                <TextField
+                    name="companyName"
+                    label="Company name"
+                    required
+                    value={companyName}
+                    error={errCompanyName}
+                    placeholder=""
+                    onChange={(e) => setCompanyName(e.target.value)}
+                />
+                {/* <TextField ref={ref} name="address" label="Address" required placeholder="Address" /> */}
+                <GooglePlacesAutocomplete
+                    apiKey="AIzaSyDLs8yb_ANP72I7nKNkiYd51P6zh_R5_4Q"
+                    apiOptions={{
+                        region: 'US',
+                        libraries: ['places'],
+                    }}
+                    inputProps={{
+                        error: errAddress,
+                        placeholder: 'Address',
+                    }}
+                    inputValue={address}
+                    setInputValue={(addr) => setAddress(addr)}
+                />
                 <Typography variant="subtitle2">Investor type*</Typography>
+                {errInvestorType && (
+                    <Typography variant="caption" color={theme.palette.error.main} sx={{ marginTop: '4px !important' }}>
+                        Investor type is required
+                    </Typography>
+                )}
                 <FormGroup>
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                {`Business Angel (investing my own capital into startups' equity)`}
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Corporate VC - General Partner or Managing Partner or Partner (investing corporate capital)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Crypto Fund - General Partner or Managing Partner or Partner (investing corporate capital)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Family Office Investment manager (investing FO capital)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Hedge Fund - General Partner or Managing Partner or Partner (investing LP capital)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Institutional Investor - Investment Manager
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Limited Partner (investing my own capital into funds)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Real Estate Investor or Real Estate Fund Manager
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Sovereign Wealth - Investment Manager
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                Sponsor (company interested to offer services to investors or their portfolio companies)
-                            </Typography>
-                        }
-                    />
-                    <FormControlLabel
-                        sx={{
-                            alignItems: 'flex-start',
-                        }}
-                        control={<Checkbox />}
-                        label={
-                            <Typography variant="inherit" pt={1}>
-                                VC Fund - General Partner or Managing Partner or Partner (investing LP capital)
-                            </Typography>
-                        }
-                    />
+                    {INVESTOR_TYPE.map((item, index) => (
+                        <FormControlLabel
+                            key={index}
+                            sx={{
+                                alignItems: 'flex-start',
+                            }}
+                            control={<Checkbox />}
+                            onClick={() => {
+                                if (investorType.includes(item)) {
+                                    setInvestorType(investorType.filter((i) => i !== item.key));
+                                } else {
+                                    setInvestorType([...investorType, item.key]);
+                                }
+                            }}
+                            label={
+                                <Typography variant="inherit" pt={1}>
+                                    {item.value}
+                                </Typography>
+                            }
+                        />
+                    ))}
                 </FormGroup>
-                <Typography variant="subtitle2">Accredited investor*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={['Yes', 'No', 'Not Sure']} selectedItems={accredited} onAdd={onAddAccredited} />
-                </Stack>
-                <Typography variant="subtitle2">Investment sectors*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={INVESTMENT_SECTORS} selectedItems={sectors} onAdd={onAddSectors} />
-                </Stack>
-                <TextField name="pastInvestSize" label="Past investment size" required placeholder="" />
-                <Typography variant="caption" color="InactiveCaptionText" sx={{ marginTop: '4px !important' }}>
-                    How many investments have you made so far?(Type number)
-                </Typography>
-                <TextField
-                    name="portfolioCompanies"
-                    label="Portfolio companies"
-                    multiline
-                    rows={3}
-                    required
-                    placeholder="Share names of portfolio companies (bullets or comma separated)"
-                />
-                <TextField name="aum" label="Your AUM $ value" required placeholder="" />
-                <Typography variant="caption" color="InactiveCaptionText" sx={{ marginTop: '4px !important' }}>
-                    What is your AUM $ value (Assets Under management in USD)?
-                </Typography>
-                <Typography variant="subtitle2">How many deals do you plan to make in the next 12 months?*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={DEAL_SIZE} selectedItems={deals} onAdd={onAddDeals} />
-                </Stack>
-                <Typography variant="subtitle2">Average investment size per company?*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={INVESTMENT_SIZE} selectedItems={investmentSize} onAdd={onAddInvestmentSize} />
-                </Stack>
-                <Typography variant="subtitle2">Investment stages*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={INVESTMENT_STAGES} selectedItems={investmentStages} onAdd={onAddInvestmentStages} />
-                </Stack>
-                <Typography variant="subtitle2">Geographies*</Typography>
-                <Stack flexWrap="wrap">
-                    <Selector data={GEOGRAPHIES} selectedItems={geographies} onAdd={onAddGeographies} />
-                </Stack>
-                <TextField
-                    name="hobbies"
-                    label="Hobbies and interests"
-                    rows={3}
-                    multiline
-                    required
-                    placeholder="Share your hobbies and interests to get match to others"
-                />
-                <TextField
-                    name="didHear"
-                    label="How did you hear about Deelio"
-                    rows={3}
-                    multiline
-                    required
-                    placeholder="Were you referred by anyone? Please provide their name"
-                />
-                <TextField name="goal" label="Your goals" rows={3} multiline required placeholder="Our mission is to help you grow and achieve your goals" />
-                <Typography variant="caption" color="InactiveCaptionText" sx={{ marginTop: '4px !important' }}>
-                    Why are you interested in joining Deelio? What are you goals?
-                </Typography>
-                <TextField name="profilePhoto" label="" type="file" required placeholder="Choose an image..." />
-                <Typography variant="caption" color="InactiveCaptionText" sx={{ marginTop: '4px !important' }}>
-                    Upload your profile photo
-                </Typography>
             </Stack>
 
-            <LoadingButton fullWidth size="large" sx={{ mb: 4 }} type="submit" variant="contained" color="inherit" onClick={handleClick}>
+            <LoadingButton fullWidth loading={loading} size="large" sx={{ mb: 4 }} type="submit" variant="contained" color="inherit" onClick={onSubmit}>
                 Submit
             </LoadingButton>
         </>

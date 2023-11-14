@@ -33,6 +33,21 @@ export const reducer = (state = initialState, action) => {
                 ...state,
                 deals: action.payload,
             };
+        case types.SET_USERS:
+            return {
+                ...state,
+                users: action.payload,
+            };
+        case types.SET_LOGOUT:
+            return {
+                ...state,
+                token: '',
+                user: {},
+                deals: [],
+                users: [],
+                email: '',
+                authed: false,
+            };
         default:
             return state;
     }

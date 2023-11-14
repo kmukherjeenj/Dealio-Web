@@ -20,11 +20,11 @@ const navConfig = [
         path: '/deal',
         icon: icon('ic_agreement'),
     },
-    // {
-    //     title: 'user',
-    //     path: '/user',
-    //     icon: icon('ic_user'),
-    // },
+    {
+        title: 'users',
+        path: '/user',
+        icon: icon('ic_user'),
+    },
     // {
     //     title: 'product',
     //     path: '/products',

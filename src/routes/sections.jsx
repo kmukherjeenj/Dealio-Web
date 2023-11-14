@@ -52,7 +52,7 @@ export default function Router() {
                         <Route path="/dashboard" element={<IndexPage />} />
                         {/* <Route path="/deals" element={<DealsPage />} /> */}
                         <Route path="/deal" element={<DealPage />} />
-                        {/* <Route path="/user" element={<UserPage />} /> */}
+                        <Route path="/user" element={<UserPage />} />
                         {/* <Route path="/products" element={<ProductsPage />} /> */}
                         {/* <Route path="/blog" element={<BlogPage />} /> */}
                     </Route>

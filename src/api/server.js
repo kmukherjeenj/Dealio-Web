@@ -1,6 +1,6 @@
 import { HTTPS } from './constant';
 import { handleError } from './handleError';
-import { SET_DEALS, SET_EMAIL, SET_LOADING } from '../redux/types';
+import { SET_USER, SET_DEALS, SET_EMAIL, SET_TOKEN, SET_USERS, SET_AUTHED, SET_LOADING } from '../redux/types';
 
 export const sendOTP = (dispatch, data) =>
     new Promise((resolve, reject) => {
@@ -54,6 +54,43 @@ export const verifyOTP = (dispatch, data) =>
             });
     });
 
+export const register = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.post('/users/register', data)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                dispatch({
+                    type: SET_USER,
+                    payload: res.data,
+                });
+                dispatch({
+                    type: SET_TOKEN,
+                    payload: res.data.token,
+                });
+                dispatch({
+                    type: SET_AUTHED,
+                    payload: true,
+                });
+                HTTPS.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
 export const getDeals = (dispatch) =>
     new Promise((resolve, reject) => {
         dispatch({
@@ -94,6 +131,34 @@ export const addDeal = (dispatch, data) =>
                 dispatch({
                     type: SET_LOADING,
                     payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
+export const getUsers = (dispatch) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.get('/users')
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                dispatch({
+                    type: SET_USERS,
+                    payload: res.data,
                 });
                 resolve(res.data);
             })
