@@ -16,7 +16,7 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function UserTableRow({ selected, name, avatarUrl, company, role, isVerified, status, handleClick }) {
+export default function UserTableRow({ selected, name, avatarUrl, company, role, email, phone, status, handleClick }) {
     const [open, setOpen] = useState(null);
 
     const handleOpenMenu = (event) => {
@@ -45,9 +45,11 @@ export default function UserTableRow({ selected, name, avatarUrl, company, role,
 
                 <TableCell>{company}</TableCell>
 
-                <TableCell>{role}</TableCell>
+                <TableCell>{email}</TableCell>
 
-                <TableCell align="center">{isVerified ? 'Yes' : 'No'}</TableCell>
+                <TableCell>{phone}</TableCell>
+
+                <TableCell>{role}</TableCell>
 
                 <TableCell>
                     <Label color={(status === 'banned' && 'error') || (status === 'pending' && 'warning') || 'success'}>{status}</Label>
@@ -88,7 +90,8 @@ UserTableRow.propTypes = {
     avatarUrl: PropTypes.any,
     company: PropTypes.any,
     handleClick: PropTypes.func,
-    isVerified: PropTypes.any,
+    email: PropTypes.any,
+    phone: PropTypes.any,
     name: PropTypes.any,
     role: PropTypes.any,
     selected: PropTypes.any,

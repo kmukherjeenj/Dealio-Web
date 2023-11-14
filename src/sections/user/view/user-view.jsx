@@ -117,8 +117,9 @@ export default function UserPage() {
                                 headLabel={[
                                     { id: 'name', label: 'Name' },
                                     { id: 'company', label: 'Company' },
+                                    { id: 'email', label: 'Email' },
+                                    { id: 'phone', label: 'Phone' },
                                     { id: 'role', label: 'Role' },
-                                    { id: 'isVerified', label: 'Verified', align: 'center' },
                                     { id: 'status', label: 'Status' },
                                     { id: '' },
                                 ]}
@@ -132,7 +133,8 @@ export default function UserPage() {
                                         status={row.verified ? 'success' : 'pending'}
                                         company={row.companyName}
                                         avatarUrl={row.avatar}
-                                        isVerified={row.verified}
+                                        email={row.email}
+                                        phone={row.phone}
                                         selected={selected.indexOf(`${row.firstName} ${row.lastName}`) !== -1}
                                         handleClick={(event) => handleClick(event, `${row.firstName} ${row.lastName}`)}
                                     />
