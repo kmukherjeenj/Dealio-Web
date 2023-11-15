@@ -3,9 +3,6 @@ import { useState } from 'react';
 
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
-// eslint-disable-next-line import/no-extraneous-dependencies
-// import { usePlacesWidget } from 'react-google-autocomplete';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import GooglePlacesAutocomplete from '@dylmye/mui-google-places-autocomplete';
 
 import Box from '@mui/material/Box';
@@ -27,12 +24,6 @@ import { bgGradient } from 'src/theme/css';
 import { INVESTOR_TYPE } from 'src/_mock/products';
 
 import Logo from 'src/components/logo';
-
-// const options = {
-//     componentRestrictions: { country: 'us' },
-//     fields: ['address_components', 'geometry', 'icon', 'name', 'formatted_address'],
-//     types: ['address'],
-// };
 
 export default function EditAccountView() {
     const theme = useTheme();
@@ -136,7 +127,6 @@ export default function EditAccountView() {
                     placeholder=""
                     onChange={(e) => setCompanyName(e.target.value)}
                 />
-                {/* <TextField ref={ref} name="address" label="Address" required placeholder="Address" /> */}
                 <GooglePlacesAutocomplete
                     apiKey="AIzaSyDLs8yb_ANP72I7nKNkiYd51P6zh_R5_4Q"
                     apiOptions={{
@@ -163,14 +153,18 @@ export default function EditAccountView() {
                             sx={{
                                 alignItems: 'flex-start',
                             }}
-                            control={<Checkbox />}
-                            onClick={() => {
-                                if (investorType.includes(item)) {
-                                    setInvestorType(investorType.filter((i) => i !== item.key));
-                                } else {
-                                    setInvestorType([...investorType, item.key]);
-                                }
-                            }}
+                            control={
+                                <Checkbox
+                                    checked={investorType.includes(item.key)}
+                                    onClick={() => {
+                                        if (investorType.includes(item.key)) {
+                                            setInvestorType(investorType.filter((i) => i !== item.key));
+                                        } else {
+                                            setInvestorType([...investorType, item.key]);
+                                        }
+                                    }}
+                                />
+                            }
                             label={
                                 <Typography variant="inherit" pt={1}>
                                     {item.value}

@@ -8,7 +8,7 @@ export default function DealsPage() {
     return (
         <>
             <Helmet>
-                <title> Deals | Minimal UI </title>
+                <title> Deals | Deelio </title>
             </Helmet>
 
             <DealsView />

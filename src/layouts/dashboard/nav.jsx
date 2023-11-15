@@ -19,7 +19,7 @@ import Logo from 'src/components/logo';
 import Scrollbar from 'src/components/scrollbar';
 
 import { NAV } from './config-layout';
-import navConfig from './config-navigation';
+import { navAdminConfig, navInvestorConfig } from './config-navigation';
 
 // ----------------------------------------------------------------------
 
@@ -27,6 +27,7 @@ export default function Nav({ openNav, onCloseNav }) {
     const pathname = usePathname();
     const user = useSelector((state) => state.user);
     const upLg = useResponsive('up', 'lg');
+    const navConfig = user && user.role === 'admin' ? navAdminConfig : navInvestorConfig;
 
     useEffect(() => {
         if (openNav) {
@@ -138,7 +139,7 @@ Nav.propTypes = {
 function NavItem({ item }) {
     const pathname = usePathname();
 
-    const active = item.path === pathname;
+    const active = pathname.includes(item.path);
 
     return (
         <ListItemButton

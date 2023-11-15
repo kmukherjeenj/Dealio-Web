@@ -11,6 +11,8 @@ export const DealsPage = lazy(() => import('src/pages/deals'));
 export const DealPage = lazy(() => import('src/pages/deal'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
+export const UserProfilePage = lazy(() => import('src/pages/user-profile'));
+export const ProfilePage = lazy(() => import('src/pages/profile'));
 export const LoginPage = lazy(() => import('src/pages/login'));
 export const VerifyPage = lazy(() => import('src/pages/verify'));
 export const EditAccountPage = lazy(() => import('src/pages/edit-account'));
@@ -36,6 +38,7 @@ const DashLayout = () => {
 
 export default function Router() {
     const token = useSelector((state) => state.token);
+    const user = useSelector((state) => state.user);
 
     useEffect(() => {
         if (token) {
@@ -51,8 +54,14 @@ export default function Router() {
                     <Route path="/" element={<DashLayout />}>
                         <Route path="/dashboard" element={<IndexPage />} />
                         {/* <Route path="/deals" element={<DealsPage />} /> */}
-                        <Route path="/deal" element={<DealPage />} />
-                        <Route path="/user" element={<UserPage />} />
+                        {user && user.role === 'admin' && (
+                            <>
+                                <Route path="/deal" element={<DealPage />} />
+                                <Route path="/user" element={<UserPage />} />
+                                <Route path="/user/:id" element={<UserProfilePage />} />
+                            </>
+                        )}
+                        <Route path="/profile" element={<ProfilePage />} />
                         {/* <Route path="/products" element={<ProductsPage />} /> */}
                         {/* <Route path="/blog" element={<BlogPage />} /> */}
                     </Route>

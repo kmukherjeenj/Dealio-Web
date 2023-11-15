@@ -16,7 +16,7 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function UserTableRow({ selected, name, avatarUrl, company, role, email, phone, status, handleClick, handleRemove }) {
+export default function UserTableRow({ selected, name, avatarUrl, company, role, email, phone, status, handleClick, handleRemove, handleDetail }) {
     const [open, setOpen] = useState(null);
 
     const handleOpenMenu = (event) => {
@@ -34,7 +34,7 @@ export default function UserTableRow({ selected, name, avatarUrl, company, role,
                     <Checkbox disableRipple checked={selected} onChange={handleClick} />
                 </TableCell>
 
-                <TableCell component="th" scope="row" padding="none">
+                <TableCell component="th" scope="row" padding="none" sx={{ cursor: 'pointer' }} onClick={handleDetail}>
                     <Stack direction="row" alignItems="center" spacing={2}>
                         <Avatar alt={name} src={avatarUrl} />
                         <Typography variant="subtitle2" noWrap>
@@ -103,4 +103,5 @@ UserTableRow.propTypes = {
     selected: PropTypes.any,
     status: PropTypes.string,
     handleRemove: PropTypes.func,
+    handleDetail: PropTypes.func,
 };

@@ -24,7 +24,7 @@ export default function DealPage() {
     return (
         <>
             <Helmet>
-                <title> User | Minimal UI </title>
+                <title> User | Deelio </title>
             </Helmet>
 
             <DealView />

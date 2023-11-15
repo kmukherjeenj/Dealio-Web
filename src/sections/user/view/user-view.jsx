@@ -1,10 +1,12 @@
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import { useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Container from '@mui/material/Container';
@@ -32,6 +34,8 @@ import { emptyRows, applyFilter, getComparator } from '../utils';
 // ----------------------------------------------------------------------
 
 export default function UserPage() {
+    const router = useNavigate();
+    const theme = useTheme();
     const dispatch = useDispatch();
     const users = useSelector((state) => state.users);
 
@@ -103,6 +107,10 @@ export default function UserPage() {
             return;
         }
         setSelected([]);
+    };
+
+    const handleDetail = (userData) => {
+        router(`/user/${userData.id}`, { state: userData });
     };
 
     const handleClick = (event, name) => {
@@ -189,6 +197,7 @@ export default function UserPage() {
                                         selected={selected.indexOf(`${row.firstName} ${row.lastName}`) !== -1}
                                         handleClick={(event) => handleClick(event, `${row.firstName} ${row.lastName}`)}
                                         handleRemove={() => handleRemove(row.id)}
+                                        handleDetail={() => handleDetail(row)}
                                     />
                                 ))}
 
@@ -217,7 +226,9 @@ export default function UserPage() {
                     <DialogContentText id="alert-dialog-description">Are you sure you want to remove this user?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeleteModal}>Cancle</Button>
+                    <Button onClick={handleCloseDeleteModal} sx={{ color: theme.palette.grey[600] }}>
+                        Cancle
+                    </Button>
                     <Button onClick={goRemove} autoFocus color="error">
                         Delete
                     </Button>

@@ -25,10 +25,6 @@ const MENU_OPTIONS = [
         label: 'Profile',
         icon: 'eva:person-fill',
     },
-    {
-        label: 'Settings',
-        icon: 'eva:settings-2-fill',
-    },
 ];
 
 // ----------------------------------------------------------------------
@@ -53,6 +49,15 @@ export default function AccountPopover() {
             type: SET_LOGOUT,
         });
         router.push('/login');
+    };
+
+    const handleMenu = (option) => {
+        handleClose();
+        if (option.label === 'Home') {
+            router.push('/dashboard');
+        } else {
+            router.push('/profile');
+        }
     };
 
     return (
@@ -108,7 +113,7 @@ export default function AccountPopover() {
                 <Divider sx={{ borderStyle: 'dashed' }} />
 
                 {MENU_OPTIONS.map((option) => (
-                    <MenuItem key={option.label} onClick={handleClose}>
+                    <MenuItem key={option.label} onClick={() => handleMenu(option)}>
                         {option.label}
                     </MenuItem>
                 ))}
