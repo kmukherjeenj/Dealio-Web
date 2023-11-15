@@ -21,6 +21,7 @@ import { users } from 'src/_mock/user';
 // import { companies } from 'src/_mock/company';
 
 import { toast } from 'react-toastify';
+import { MuiFileInput } from 'mui-file-input';
 import { useDispatch, useSelector } from 'react-redux';
 
 import Dialog from '@mui/material/Dialog';
@@ -29,8 +30,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
-import { addDeal } from 'src/api/server';
 import { SET_DEALS } from 'src/redux/types';
+import { addDeal, uploadFile, uploadFiles } from 'src/api/server';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
@@ -41,7 +42,6 @@ import DealTableHead from '../deal-table-head';
 import TableEmptyRows from '../deal-empty-rows';
 import DealTableToolbar from '../deal-table-toolbar';
 import { emptyRows, applyFilter, getComparator } from '../utils';
-
 // ----------------------------------------------------------------------
 
 const modalStyle = {
@@ -72,6 +72,9 @@ export default function DealView() {
     const [filterName, setFilterName] = useState('');
     const [rowsPerPage, setRowsPerPage] = useState(5);
 
+    const [pastProjects, setPastProjects] = useState(null);
+    const [mainImage, setMainImage] = useState(null);
+    const [errMainImage, setErrMainImage] = useState(false);
     const [title, setTitle] = useState('');
     const [errTitle, setErrTitle] = useState(false);
     const [description, setDescription] = useState('');
@@ -98,9 +101,7 @@ export default function DealView() {
     const [errSecuritiesFilings, setErrSecuritiesFilings] = useState(false);
     const [regulatoryComplianceDetailss, setRegulatoryComplianceDetails] = useState('');
     const [errRegulatoryComplianceDetails, setErrRegulatoryComplianceDetails] = useState(false);
-    const [attachmentName, setAttachmentsName] = useState('');
-    const [errAttachmentName, setErrAttachmentName] = useState(false);
-    const [attachmentUrl, setAttachmentUrl] = useState('');
+    const [attachmentUrl, setAttachmentUrl] = useState(null);
     const [errAttachmentUrl, setErrAttachmentUrl] = useState(false);
     const [risksAndDisclaimers, setRisksAndDisclaimerss] = useState('');
     const [errRisksAndDisclaimers, setErrRisksAndDisclaimers] = useState(false);
@@ -115,11 +116,9 @@ export default function DealView() {
     const [dealsDuration, setDealDuration] = useState('');
     const [errDealDuration, setErrDealDuration] = useState(false);
 
-    // useEffect(() => {
-
-    // }, [title, description, businessPlan, fundingGoal, valuation]);
-
     const onSubmit = () => {
+        if (!mainImage) setErrMainImage(true);
+        else setErrMainImage(false);
         if (!title) setErrTitle(true);
         else setErrTitle(false);
         if (!description) setErrDesc(true);
@@ -142,8 +141,6 @@ export default function DealView() {
         else setErrSecuritiesFilings(false);
         if (!regulatoryComplianceDetailss) setErrRegulatoryComplianceDetails(true);
         else setErrRegulatoryComplianceDetails(false);
-        if (!attachmentName) setErrAttachmentName(true);
-        else setErrAttachmentName(false);
         if (!attachmentUrl) setErrAttachmentUrl(true);
         else setErrAttachmentUrl(false);
         if (!risksAndDisclaimers) setErrRisksAndDisclaimers(true);
@@ -172,7 +169,6 @@ export default function DealView() {
             !termsAndConditions ||
             !securitiesFilings ||
             !regulatoryComplianceDetailss ||
-            !attachmentName ||
             !attachmentUrl ||
             !risksAndDisclaimers ||
             !dueDiligenceMaterials ||
@@ -183,55 +179,136 @@ export default function DealView() {
         ) {
             toast('Please fill all required fields', { type: 'error' });
         } else {
-            const request = {
-                title,
-                description,
-                businessPlan,
-                company: '654a87cbfe56fb2f739aafba',
-                financial: {
-                    fundingGoal,
-                    valuation,
-                    profit: revenue,
-                    projections: financialProjections,
-                },
-                dealStructure: {
-                    type: investmentType.split(','),
-                    terms: investmentTerms,
-                    ownershipPercentageOffered: Number(ownershipPercentageOffered),
-                },
-                useOfFunds,
-                milestones: transactionAndMiletones,
-                legalAndCompliance: {
-                    termsAndConditions,
-                    securities: securitiesFilings,
-                    complianceDetails: regulatoryComplianceDetailss,
-                    attachments: [
-                        {
-                            name: attachmentName,
-                            url: attachmentUrl,
-                        },
-                    ],
-                    risksAndDisclaimers,
-                    diligenceMaterials: dueDiligenceMaterials,
-                },
-                investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
-                minMaxInvestmentAmount: {
-                    min: Number(minInvestmentAmount),
-                    max: Number(maxInvestmentAmount),
-                },
-                dealDuration: dealsDuration,
-            };
+            console.log('attachment : ', attachmentUrl);
 
-            addDeal(dispatch, request)
+            uploadFile(dispatch, mainImage)
                 .then((res) => {
-                    setOpen(false);
-                    dispatch({
-                        type: SET_DEALS,
-                        payload: [...deals, res],
-                    });
+                    console.log('res main : ', res);
+                    const mainUrl = res.data.url;
+                    uploadFiles(dispatch, attachmentUrl)
+                        .then((res1) => {
+                            console.log('res : ', res1);
+                            const attachments = [];
+                            attachmentUrl.map((att, i) => {
+                                attachments.push({
+                                    name: att.name,
+                                    url: res1.data[i].url,
+                                });
+                                return null;
+                            });
+                            if (pastProjects) {
+                                uploadFiles(dispatch, pastProjects)
+                                    .then((res2) => {
+                                        console.log('res : ', res2);
+
+                                        const pastProjectUrl = res2.data.map((att) => att.url);
+
+                                        const request = {
+                                            title,
+                                            description,
+                                            businessPlan,
+                                            company: '654a87cbfe56fb2f739aafba',
+                                            mainImage: mainUrl,
+                                            financial: {
+                                                fundingGoal,
+                                                valuation,
+                                                profit: revenue,
+                                                projections: financialProjections,
+                                            },
+                                            dealStructure: {
+                                                type: investmentType.split(','),
+                                                terms: investmentTerms,
+                                                ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                                            },
+                                            useOfFunds,
+                                            milestones: transactionAndMiletones,
+                                            legalAndCompliance: {
+                                                termsAndConditions,
+                                                securities: securitiesFilings,
+                                                complianceDetails: regulatoryComplianceDetailss,
+                                                attachments,
+                                                risksAndDisclaimers,
+                                                diligenceMaterials: dueDiligenceMaterials,
+                                            },
+                                            investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                                            minMaxInvestmentAmount: {
+                                                min: Number(minInvestmentAmount),
+                                                max: Number(maxInvestmentAmount),
+                                            },
+                                            dealDuration: dealsDuration,
+                                            pastProjects: pastProjectUrl,
+                                        };
+
+                                        addDeal(dispatch, request)
+                                            .then((response) => {
+                                                setOpen(false);
+                                                dispatch({
+                                                    type: SET_DEALS,
+                                                    payload: [...deals, response],
+                                                });
+                                            })
+                                            .catch((err) => {
+                                                toast(err, { type: 'error' });
+                                            });
+                                    })
+                                    .catch((err2) => {
+                                        console.log('err past : ', err2);
+                                    });
+                            } else {
+                                const request = {
+                                    title,
+                                    description,
+                                    businessPlan,
+                                    company: '654a87cbfe56fb2f739aafba',
+                                    mainImage: mainUrl,
+                                    financial: {
+                                        fundingGoal,
+                                        valuation,
+                                        profit: revenue,
+                                        projections: financialProjections,
+                                    },
+                                    dealStructure: {
+                                        type: investmentType.split(','),
+                                        terms: investmentTerms,
+                                        ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                                    },
+                                    useOfFunds,
+                                    milestones: transactionAndMiletones,
+                                    legalAndCompliance: {
+                                        termsAndConditions,
+                                        securities: securitiesFilings,
+                                        complianceDetails: regulatoryComplianceDetailss,
+                                        attachments,
+                                        risksAndDisclaimers,
+                                        diligenceMaterials: dueDiligenceMaterials,
+                                    },
+                                    investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                                    minMaxInvestmentAmount: {
+                                        min: Number(minInvestmentAmount),
+                                        max: Number(maxInvestmentAmount),
+                                    },
+                                    dealDuration: dealsDuration,
+                                    pastProjects: [],
+                                };
+                                addDeal(dispatch, request)
+                                    .then((response) => {
+                                        setOpen(false);
+                                        dispatch({
+                                            type: SET_DEALS,
+                                            payload: [...deals, response],
+                                        });
+                                    })
+                                    .catch((err) => {
+                                        toast(err, { type: 'error' });
+                                    });
+                            }
+                        })
+                        .catch((err1) => {
+                            console.log('err : ', err1);
+                        });
                 })
                 .catch((err) => {
-                    toast(err, { type: 'error' });
+                    console.log('err main : ', err);
                 });
         }
     };
@@ -399,6 +476,25 @@ export default function DealView() {
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
                             Copy and paste the business plan file link(We do not support file upload function for now)
                         </Typography>
+                        <MuiFileInput
+                            name="mainImage"
+                            label="Deal Image"
+                            value={mainImage}
+                            variant="outlined"
+                            required
+                            error={errMainImage}
+                            onChange={setMainImage}
+                            InputProps={{
+                                color: 'primary',
+                                inputProps: {
+                                    accept: 'image/*',
+                                },
+                                startAdornment: <Iconify icon="eva:attach-fill" />,
+                            }}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Please choose an image for your deal(format: image/*)
+                        </Typography>
                         {/* Dont remove below code this will be added in the future. */}
                         {/* <Autocomplete
                             disablePortal
@@ -522,29 +618,26 @@ export default function DealView() {
                         <Typography id="modal-modal-description" sx={{ mt: 2, mb: 2 }}>
                             Attachments:
                         </Typography>
-                        <TextField
-                            name="attachmentsName"
-                            required
-                            label="Attachments Name"
-                            error={errAttachmentName}
-                            value={attachmentName}
-                            onChange={(e) => setAttachmentsName(e.target.value)}
-                            placeholder="Attachments, Legal Docs Name"
-                        />
-                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
-                            Attachments File Name(e.g., Summary)
-                        </Typography>
-                        <TextField
-                            name="attachmentsUrl"
-                            required
-                            label="Attachments URL"
-                            error={errAttachmentUrl}
+                        <MuiFileInput
+                            name="attachmentPDF"
+                            label="Attachment PDFs"
                             value={attachmentUrl}
-                            onChange={(e) => setAttachmentUrl(e.target.value)}
-                            placeholder="Attachments file URL"
+                            required
+                            error={errAttachmentUrl}
+                            variant="outlined"
+                            multiple
+                            onChange={setAttachmentUrl}
+                            sx={{ mt: 2 }}
+                            InputProps={{
+                                color: 'primary',
+                                inputProps: {
+                                    accept: 'application/pdf',
+                                },
+                                startAdornment: <Iconify icon="eva:attach-fill" />,
+                            }}
                         />
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
-                            Copy and paste attachments file link(We do not support file upload function for now)
+                            Please choose documents for your deal(format: PDF)
                         </Typography>
                         <TextField
                             name="risksAnddisclaimers"
@@ -622,6 +715,24 @@ export default function DealView() {
                         />
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
                             The timeframe during which the deal is open for investment.
+                        </Typography>
+                        <MuiFileInput
+                            name="pastProjects"
+                            label="Past Projects"
+                            value={pastProjects}
+                            variant="outlined"
+                            multiple
+                            onChange={setPastProjects}
+                            InputProps={{
+                                color: 'primary',
+                                inputProps: {
+                                    accept: 'image/*',
+                                },
+                                startAdornment: <Iconify icon="eva:attach-fill" />,
+                            }}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Please choose images for your past projects(format: image/*)
                         </Typography>
                         <LoadingButton loading={loading} sx={{ mt: 2 }} onClick={onSubmit}>
                             Submit
