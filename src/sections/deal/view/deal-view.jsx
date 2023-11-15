@@ -31,7 +31,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { SET_DEALS } from 'src/redux/types';
-import { addDeal, uploadFile, uploadFiles } from 'src/api/server';
+import { addDeal, uploadFiles } from 'src/api/server';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
@@ -60,7 +60,6 @@ const modalStyle = {
 export default function DealView() {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const loading = useSelector((state) => state.loading);
     const deals = useSelector((state) => state.deals);
 
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -179,15 +178,11 @@ export default function DealView() {
         ) {
             toast('Please fill all required fields', { type: 'error' });
         } else {
-            console.log('attachment : ', attachmentUrl);
-
-            uploadFile(dispatch, mainImage)
+            uploadFiles(dispatch, [mainImage])
                 .then((res) => {
-                    console.log('res main : ', res);
-                    const mainUrl = res.data.url;
+                    const mainUrl = res.data[0].url;
                     uploadFiles(dispatch, attachmentUrl)
                         .then((res1) => {
-                            console.log('res : ', res1);
                             const attachments = [];
                             attachmentUrl.map((att, i) => {
                                 attachments.push({
@@ -199,8 +194,6 @@ export default function DealView() {
                             if (pastProjects) {
                                 uploadFiles(dispatch, pastProjects)
                                     .then((res2) => {
-                                        console.log('res : ', res2);
-
                                         const pastProjectUrl = res2.data.map((att) => att.url);
 
                                         const request = {
@@ -246,13 +239,14 @@ export default function DealView() {
                                                     type: SET_DEALS,
                                                     payload: [...deals, response],
                                                 });
+                                                toast('New Deal added successfully!', { type: 'success' });
                                             })
                                             .catch((err) => {
                                                 toast(err, { type: 'error' });
                                             });
                                     })
                                     .catch((err2) => {
-                                        console.log('err past : ', err2);
+                                        toast(err2, { type: 'error' });
                                     });
                             } else {
                                 const request = {
@@ -297,6 +291,7 @@ export default function DealView() {
                                             type: SET_DEALS,
                                             payload: [...deals, response],
                                         });
+                                        toast('New Deal added successfully!', { type: 'success' });
                                     })
                                     .catch((err) => {
                                         toast(err, { type: 'error' });
@@ -304,11 +299,11 @@ export default function DealView() {
                             }
                         })
                         .catch((err1) => {
-                            console.log('err : ', err1);
+                            toast(err1, { type: 'error' });
                         });
                 })
                 .catch((err) => {
-                    console.log('err main : ', err);
+                    toast(err, { type: 'error' });
                 });
         }
     };
@@ -734,7 +729,7 @@ export default function DealView() {
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
                             Please choose images for your past projects(format: image/*)
                         </Typography>
-                        <LoadingButton loading={loading} sx={{ mt: 2 }} onClick={onSubmit}>
+                        <LoadingButton sx={{ mt: 2 }} onClick={onSubmit}>
                             Submit
                         </LoadingButton>
                     </Stack>
@@ -742,9 +737,9 @@ export default function DealView() {
             </Modal>
 
             <Dialog open={openDeleteModal} onClose={handleCloseDeleteModal} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
-                <DialogTitle id="alert-dialog-title">Remove User</DialogTitle>
+                <DialogTitle id="alert-dialog-title">Remove Deal</DialogTitle>
                 <DialogContent>
-                    <DialogContentText id="alert-dialog-description">Are you sure you want to remove this user?</DialogContentText>
+                    <DialogContentText id="alert-dialog-description">Are you sure you want to remove this deal?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDeleteModal}>Cancle</Button>

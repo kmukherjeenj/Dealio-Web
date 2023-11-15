@@ -201,41 +201,12 @@ export const uploadFiles = (dispatch, data) =>
             type: SET_LOADING,
             payload: true,
         });
-
         const formData = new FormData();
         data.map((file) => {
             formData.append('file', file);
             return null;
         });
-
-        HTTPS.post(`/upload/multi`, formData)
-            .then((res) => {
-                dispatch({
-                    type: SET_LOADING,
-                    payload: false,
-                });
-                resolve(res.data);
-            })
-            .catch((err) => {
-                dispatch({
-                    type: SET_LOADING,
-                    payload: false,
-                });
-                reject(handleError(err));
-            });
-    });
-
-export const uploadFile = (dispatch, data) =>
-    new Promise((resolve, reject) => {
-        dispatch({
-            type: SET_LOADING,
-            payload: true,
-        });
-
-        const formData = new FormData();
-        formData.append('file', data);
-
-        HTTPS.post(`/upload`, formData)
+        HTTPS.post('/upload', formData)
             .then((res) => {
                 dispatch({
                     type: SET_LOADING,
