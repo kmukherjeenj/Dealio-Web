@@ -170,3 +170,27 @@ export const getUsers = (dispatch) =>
                 reject(handleError(err));
             });
     });
+
+export const removeUser = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.delete(`/users/${data.id}`)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });

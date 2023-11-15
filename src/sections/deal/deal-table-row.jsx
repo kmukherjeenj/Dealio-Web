@@ -15,7 +15,7 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function DealTableRow({ selected, mainImage, title, budget, duration, company, handleClick }) {
+export default function DealTableRow({ selected, mainImage, title, budget, duration, company, handleClick, handleRemove }) {
     const [open, setOpen] = useState(null);
 
     const handleOpenMenu = (event) => {
@@ -70,7 +70,13 @@ export default function DealTableRow({ selected, mainImage, title, budget, durat
                     Edit
                 </MenuItem>
 
-                <MenuItem onClick={handleCloseMenu} sx={{ color: 'error.main' }}>
+                <MenuItem
+                    onClick={() => {
+                        handleCloseMenu();
+                        handleRemove();
+                    }}
+                    sx={{ color: 'error.main' }}
+                >
                     <Iconify icon="eva:trash-2-outline" sx={{ mr: 2 }} />
                     Delete
                 </MenuItem>
@@ -87,4 +93,5 @@ DealTableRow.propTypes = {
     title: PropTypes.any,
     budget: PropTypes.any,
     selected: PropTypes.any,
+    handleRemove: PropTypes.func,
 };

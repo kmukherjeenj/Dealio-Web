@@ -23,6 +23,12 @@ import { users } from 'src/_mock/user';
 import { toast } from 'react-toastify';
 import { useDispatch, useSelector } from 'react-redux';
 
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+
 import { addDeal } from 'src/api/server';
 import { SET_DEALS } from 'src/redux/types';
 
@@ -57,6 +63,7 @@ export default function DealView() {
     const loading = useSelector((state) => state.loading);
     const deals = useSelector((state) => state.deals);
 
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [open, setOpen] = useState(false);
     const [page, setPage] = useState(0);
     const [order, setOrder] = useState('asc');
@@ -232,6 +239,13 @@ export default function DealView() {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
+    const handleOpenDeleteModal = () => setOpenDeleteModal(true);
+    const handleCloseDeleteModal = () => setOpenDeleteModal(false);
+
+    const handleRemove = () => {
+        handleOpenDeleteModal();
+    };
+
     const handleSort = (event, id) => {
         const isAsc = orderBy === id && order === 'asc';
         if (id !== '') {
@@ -328,6 +342,7 @@ export default function DealView() {
                                         company={row.company.name}
                                         selected={selected.indexOf(row.title) !== -1}
                                         handleClick={(event) => handleClick(event, row.title)}
+                                        handleRemove={handleRemove}
                                     />
                                 ))}
 
@@ -614,6 +629,19 @@ export default function DealView() {
                     </Stack>
                 </Box>
             </Modal>
+
+            <Dialog open={openDeleteModal} onClose={handleCloseDeleteModal} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+                <DialogTitle id="alert-dialog-title">Remove User</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">Are you sure you want to remove this user?</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDeleteModal}>Cancle</Button>
+                    <Button onClick={handleCloseDeleteModal} autoFocus>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }

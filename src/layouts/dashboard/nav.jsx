@@ -26,8 +26,6 @@ import navConfig from './config-navigation';
 export default function Nav({ openNav, onCloseNav }) {
     const pathname = usePathname();
     const user = useSelector((state) => state.user);
-    const token = useSelector((state) => state.token);
-    console.log('token : ', token);
     const upLg = useResponsive('up', 'lg');
 
     useEffect(() => {

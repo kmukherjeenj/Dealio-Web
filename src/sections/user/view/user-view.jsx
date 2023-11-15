@@ -1,15 +1,23 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
 import Container from '@mui/material/Container';
 import TableBody from '@mui/material/TableBody';
 import Typography from '@mui/material/Typography';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
+import DialogContentText from '@mui/material/DialogContentText';
+
+import { getUsers, removeUser } from 'src/api/server';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
@@ -24,7 +32,12 @@ import { emptyRows, applyFilter, getComparator } from '../utils';
 // ----------------------------------------------------------------------
 
 export default function UserPage() {
+    const dispatch = useDispatch();
     const users = useSelector((state) => state.users);
+
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
+    const [removeId, setRemoveId] = useState(null);
+
     const [page, setPage] = useState(0);
 
     const [order, setOrder] = useState('asc');
@@ -36,6 +49,44 @@ export default function UserPage() {
     const [filterName, setFilterName] = useState('');
 
     const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    useEffect(() => {
+        getUsers(dispatch)
+            .then(() => {})
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
+    }, [dispatch]);
+
+    const handleOpenDeleteModal = () => setOpenDeleteModal(true);
+    const handleCloseDeleteModal = () => setOpenDeleteModal(false);
+
+    const handleRemove = (id) => {
+        setRemoveId(id);
+        handleOpenDeleteModal();
+    };
+
+    const goRemove = () => {
+        if (removeId) {
+            handleCloseDeleteModal();
+            removeUser(dispatch, { id: removeId })
+                .then((res) => {
+                    getData();
+                    toast('Successfully deleted user', { type: 'success' });
+                })
+                .catch((err) => {
+                    toast(err, { type: 'error' });
+                });
+        }
+    };
+
+    const getData = useCallback(() => {
+        getUsers(dispatch)
+            .then(() => {})
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
+    }, [dispatch]);
 
     const handleSort = (event, id) => {
         const isAsc = orderBy === id && order === 'asc';
@@ -137,6 +188,7 @@ export default function UserPage() {
                                         phone={row.phone}
                                         selected={selected.indexOf(`${row.firstName} ${row.lastName}`) !== -1}
                                         handleClick={(event) => handleClick(event, `${row.firstName} ${row.lastName}`)}
+                                        handleRemove={() => handleRemove(row.id)}
                                     />
                                 ))}
 
@@ -158,6 +210,19 @@ export default function UserPage() {
                     onRowsPerPageChange={handleChangeRowsPerPage}
                 />
             </Card>
+
+            <Dialog open={openDeleteModal} onClose={handleCloseDeleteModal} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">
+                <DialogTitle id="alert-dialog-title">Remove User</DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">Are you sure you want to remove this user?</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDeleteModal}>Cancle</Button>
+                    <Button onClick={goRemove} autoFocus color="error">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }
