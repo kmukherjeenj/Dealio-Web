@@ -372,6 +372,24 @@ export default function DealView() {
 
     const notFound = !dataFiltered.length && !!filterName;
 
+    const handleInvestmentAmount = (e, name) => {
+        if (name === 'min') {
+            if (e.target.value?.includes('$')) {
+                if (!Number.isNaN(e.target.value?.substring(1))) {
+                    setMinInvestmentAmount(Number(e.target.value.substring(1)));
+                }
+            } else if (!Number.isNaN(e.target.value)) {
+                setMinInvestmentAmount(Number(e.target.value));
+            }
+        } else if (e.target.value?.includes('$')) {
+            if (!Number.isNaN(e.target.value?.substring(1))) {
+                setMaxInvestmentAmount(Number(e.target.value.substring(1)));
+            }
+        } else if (!Number.isNaN(e.target.value)) {
+            setMaxInvestmentAmount(Number(e.target.value));
+        }
+    };
+
     return (
         <Container>
             <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
@@ -678,10 +696,9 @@ export default function DealView() {
                             required
                             label="Minimum Investment Amounts"
                             placeholder="10000"
-                            type="number"
                             error={errMinInvestmentAmount}
-                            value={minInvestmentAmount}
-                            onChange={(e) => setMinInvestmentAmount(e.target.value)}
+                            value={minInvestmentAmount ? `$ ${minInvestmentAmount}` : ''}
+                            onChange={(e) => handleInvestmentAmount(e, 'min')}
                         />
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
                             The minimum amounts that investors can contribute to the deal.
@@ -689,12 +706,11 @@ export default function DealView() {
                         <TextField
                             name="maxInvestmentAmount"
                             required
-                            type="number"
                             label="Maximum Investment Amounts"
                             placeholder="$10000"
                             error={errMaxInvestmentAmount}
-                            value={maxInvestmentAmount}
-                            onChange={(e) => setMaxInvestmentAmount(e.target.value)}
+                            value={maxInvestmentAmount ? `$ ${maxInvestmentAmount}` : ''}
+                            onChange={(e) => handleInvestmentAmount(e, 'max')}
                         />
                         <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
                             The maximum amounts that investors can contribute to the deal.
