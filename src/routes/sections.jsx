@@ -9,6 +9,7 @@ import DashboardLayout from 'src/layouts/dashboard';
 export const IndexPage = lazy(() => import('src/pages/app'));
 export const DealsPage = lazy(() => import('src/pages/deals'));
 export const DealPage = lazy(() => import('src/pages/deal'));
+export const DealDetailPage = lazy(() => import('src/pages/deal-detail'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const UserProfilePage = lazy(() => import('src/pages/user-profile'));
@@ -57,6 +58,7 @@ export default function Router() {
                         {user && user.role === 'admin' && (
                             <>
                                 <Route path="/deal" element={<DealPage />} />
+                                <Route path="/deal/:id" element={<DealDetailPage />} />
                                 <Route path="/user" element={<UserPage />} />
                                 <Route path="/user/:id" element={<UserProfilePage />} />
                             </>

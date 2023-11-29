@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 import { HTTPS } from './constant';
 import { handleError } from './handleError';
 import { SET_USER, SET_DEALS, SET_EMAIL, SET_TOKEN, SET_USERS, SET_AUTHED, SET_LOADING } from '../redux/types';
@@ -125,7 +127,6 @@ export const addDeal = (dispatch, data) =>
             type: SET_LOADING,
             payload: true,
         });
-
         HTTPS.post('/deals/add', data)
             .then((res) => {
                 dispatch({
@@ -220,5 +221,63 @@ export const uploadFiles = (dispatch, data) =>
                     payload: false,
                 });
                 reject(handleError(err));
+            });
+    });
+
+export const uploadToAnalyze = (dispatch, url) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        const headers = {
+            'x-api-key': 'ask_653c2ceba8aaeb889196dd42cc824a01',
+        };
+
+        axios
+            .get('https://api.askyourpdf.com/v1/api/download_pdf', {
+                headers,
+                params: {
+                    url,
+                },
+            })
+            .then((response) => {
+                if (response.status === 201) {
+                    dispatch({
+                        type: SET_LOADING,
+                        payload: false,
+                    });
+                    resolve(response.data);
+                } else {
+                    reject(handleError(response.status));
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                reject(handleError(error));
+            });
+    });
+
+export const getChat = (docID, message) =>
+    new Promise((resolve, reject) => {
+        const headers = {
+            'x-api-key': 'ask_653c2ceba8aaeb889196dd42cc824a01',
+            'Content-Type': 'application/json',
+        };
+
+        axios
+            .post(`https://api.askyourpdf.com/v1/chat/${docID}`, message, {
+                headers,
+            })
+            .then((response) => {
+                if (response.status === 200) {
+                    resolve(response.data);
+                } else {
+                    reject(handleError(response.status));
+                }
+            })
+            .catch((error) => {
+                reject(handleError(error));
             });
     });

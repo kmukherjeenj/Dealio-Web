@@ -36,7 +36,7 @@ export default function UserTableRow({ selected, name, avatarUrl, company, role,
 
                 <TableCell component="th" scope="row" padding="none" sx={{ cursor: 'pointer' }} onClick={handleDetail}>
                     <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar alt={name} src={avatarUrl} />
+                        <Avatar alt={name} src={avatarUrl || name} />
                         <Typography variant="subtitle2" noWrap>
                             {name}
                         </Typography>

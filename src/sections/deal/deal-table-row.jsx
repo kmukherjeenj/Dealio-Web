@@ -15,7 +15,7 @@ import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function DealTableRow({ selected, mainImage, title, budget, duration, company, handleClick, handleRemove }) {
+export default function DealTableRow({ selected, mainImage, title, budget, duration, company, handleClick, handleRemove, handleDetail }) {
     const [open, setOpen] = useState(null);
 
     const handleOpenMenu = (event) => {
@@ -33,7 +33,7 @@ export default function DealTableRow({ selected, mainImage, title, budget, durat
                     <Checkbox disableRipple checked={selected} onChange={handleClick} />
                 </TableCell>
 
-                <TableCell component="th" scope="row" padding="none" sx={{ cursor: 'pointer' }}>
+                <TableCell component="th" scope="row" padding="none" sx={{ cursor: 'pointer' }} onClick={handleDetail}>
                     <Stack direction="row" alignItems="center" spacing={2}>
                         <Avatar alt={title} src={mainImage} />
                         <Typography variant="subtitle2" noWrap>
@@ -94,4 +94,5 @@ DealTableRow.propTypes = {
     budget: PropTypes.any,
     selected: PropTypes.any,
     handleRemove: PropTypes.func,
+    handleDetail: PropTypes.func,
 };

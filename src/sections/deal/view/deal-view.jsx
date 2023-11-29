@@ -22,6 +22,7 @@ import { users } from 'src/_mock/user';
 
 import { toast } from 'react-toastify';
 import { MuiFileInput } from 'mui-file-input';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 import Dialog from '@mui/material/Dialog';
@@ -31,7 +32,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { SET_DEALS } from 'src/redux/types';
-import { addDeal, uploadFiles } from 'src/api/server';
+import { addDeal, uploadFiles, uploadToAnalyze } from 'src/api/server';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
@@ -58,6 +59,7 @@ const modalStyle = {
 };
 
 export default function DealView() {
+    const router = useNavigate();
     const theme = useTheme();
     const dispatch = useDispatch();
     const deals = useSelector((state) => state.deals);
@@ -182,20 +184,80 @@ export default function DealView() {
                 .then((res) => {
                     const mainUrl = res.data[0].url;
                     uploadFiles(dispatch, attachmentUrl)
-                        .then((res1) => {
+                        .then(async (res1) => {
                             const attachments = [];
-                            attachmentUrl.map((att, i) => {
-                                attachments.push({
-                                    name: att.name,
-                                    url: res1.data[i].url,
-                                });
-                                return null;
-                            });
-                            if (pastProjects) {
-                                uploadFiles(dispatch, pastProjects)
-                                    .then((res2) => {
-                                        const pastProjectUrl = res2.data.map((att) => att.url);
+                            const promises = [];
+                            const pdfs = res1.data;
 
+                            pdfs.map((pdf, i) => promises.push(uploadToAnalyze(dispatch, pdf.url)));
+
+                            Promise.all(promises)
+                                .then((resAnalyze) => {
+                                    pdfs.map((_, i) => {
+                                        attachments.push({
+                                            name: attachmentUrl[i].name,
+                                            url: _.url,
+                                            docID: resAnalyze[i].docId,
+                                        });
+                                        return null;
+                                    });
+                                    if (pastProjects) {
+                                        uploadFiles(dispatch, pastProjects)
+                                            .then((res2) => {
+                                                const pastProjectUrl = res2.data.map((att) => att.url);
+
+                                                const request = {
+                                                    title,
+                                                    description,
+                                                    businessPlan,
+                                                    company: '654a87cbfe56fb2f739aafba',
+                                                    mainImage: mainUrl,
+                                                    financial: {
+                                                        fundingGoal,
+                                                        valuation,
+                                                        profit: revenue,
+                                                        projections: financialProjections,
+                                                    },
+                                                    dealStructure: {
+                                                        type: investmentType.split(','),
+                                                        terms: investmentTerms,
+                                                        ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                                                    },
+                                                    useOfFunds,
+                                                    milestones: transactionAndMiletones,
+                                                    legalAndCompliance: {
+                                                        termsAndConditions,
+                                                        securities: securitiesFilings,
+                                                        complianceDetails: regulatoryComplianceDetailss,
+                                                        attachments,
+                                                        risksAndDisclaimers,
+                                                        diligenceMaterials: dueDiligenceMaterials,
+                                                    },
+                                                    investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                                                    minMaxInvestmentAmount: {
+                                                        min: Number(minInvestmentAmount),
+                                                        max: Number(maxInvestmentAmount),
+                                                    },
+                                                    dealDuration: dealsDuration,
+                                                    pastProjects: pastProjectUrl,
+                                                };
+                                                addDeal(dispatch, request)
+                                                    .then((response) => {
+                                                        setOpen(false);
+                                                        dispatch({
+                                                            type: SET_DEALS,
+                                                            payload: [...deals, response],
+                                                        });
+                                                        toast('New Deal added successfully!', { type: 'success' });
+                                                    })
+                                                    .catch((err) => {
+                                                        toast(err, { type: 'error' });
+                                                    });
+                                            })
+                                            .catch((err2) => {
+                                                toast(err2, { type: 'error' });
+                                            });
+                                    } else {
                                         const request = {
                                             title,
                                             description,
@@ -229,9 +291,8 @@ export default function DealView() {
                                                 max: Number(maxInvestmentAmount),
                                             },
                                             dealDuration: dealsDuration,
-                                            pastProjects: pastProjectUrl,
+                                            pastProjects: [],
                                         };
-
                                         addDeal(dispatch, request)
                                             .then((response) => {
                                                 setOpen(false);
@@ -244,59 +305,126 @@ export default function DealView() {
                                             .catch((err) => {
                                                 toast(err, { type: 'error' });
                                             });
-                                    })
-                                    .catch((err2) => {
-                                        toast(err2, { type: 'error' });
-                                    });
-                            } else {
-                                const request = {
-                                    title,
-                                    description,
-                                    businessPlan,
-                                    company: '654a87cbfe56fb2f739aafba',
-                                    mainImage: mainUrl,
-                                    financial: {
-                                        fundingGoal,
-                                        valuation,
-                                        profit: revenue,
-                                        projections: financialProjections,
-                                    },
-                                    dealStructure: {
-                                        type: investmentType.split(','),
-                                        terms: investmentTerms,
-                                        ownershipPercentageOffered: Number(ownershipPercentageOffered),
-                                    },
-                                    useOfFunds,
-                                    milestones: transactionAndMiletones,
-                                    legalAndCompliance: {
-                                        termsAndConditions,
-                                        securities: securitiesFilings,
-                                        complianceDetails: regulatoryComplianceDetailss,
-                                        attachments,
-                                        risksAndDisclaimers,
-                                        diligenceMaterials: dueDiligenceMaterials,
-                                    },
-                                    investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
-                                    minMaxInvestmentAmount: {
-                                        min: Number(minInvestmentAmount),
-                                        max: Number(maxInvestmentAmount),
-                                    },
-                                    dealDuration: dealsDuration,
-                                    pastProjects: [],
-                                };
-                                addDeal(dispatch, request)
-                                    .then((response) => {
-                                        setOpen(false);
-                                        dispatch({
-                                            type: SET_DEALS,
-                                            payload: [...deals, response],
+                                    }
+                                })
+                                .catch((errA) => {
+                                    pdfs.map((_, i) => {
+                                        attachments.push({
+                                            name: attachmentUrl[i].name,
+                                            url: _.url,
+                                            docID: '',
                                         });
-                                        toast('New Deal added successfully!', { type: 'success' });
-                                    })
-                                    .catch((err) => {
-                                        toast(err, { type: 'error' });
+                                        return null;
                                     });
-                            }
+                                    if (pastProjects) {
+                                        uploadFiles(dispatch, pastProjects)
+                                            .then((res2) => {
+                                                const pastProjectUrl = res2.data.map((att) => att.url);
+
+                                                const request = {
+                                                    title,
+                                                    description,
+                                                    businessPlan,
+                                                    company: '654a87cbfe56fb2f739aafba',
+                                                    mainImage: mainUrl,
+                                                    financial: {
+                                                        fundingGoal,
+                                                        valuation,
+                                                        profit: revenue,
+                                                        projections: financialProjections,
+                                                    },
+                                                    dealStructure: {
+                                                        type: investmentType.split(','),
+                                                        terms: investmentTerms,
+                                                        ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                                                    },
+                                                    useOfFunds,
+                                                    milestones: transactionAndMiletones,
+                                                    legalAndCompliance: {
+                                                        termsAndConditions,
+                                                        securities: securitiesFilings,
+                                                        complianceDetails: regulatoryComplianceDetailss,
+                                                        attachments,
+                                                        risksAndDisclaimers,
+                                                        diligenceMaterials: dueDiligenceMaterials,
+                                                    },
+                                                    investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                                                    minMaxInvestmentAmount: {
+                                                        min: Number(minInvestmentAmount),
+                                                        max: Number(maxInvestmentAmount),
+                                                    },
+                                                    dealDuration: dealsDuration,
+                                                    pastProjects: pastProjectUrl,
+                                                };
+                                                console.log('request : ', request);
+                                                addDeal(dispatch, request)
+                                                    .then((response) => {
+                                                        console.log('response : ', response);
+                                                        setOpen(false);
+                                                        dispatch({
+                                                            type: SET_DEALS,
+                                                            payload: [...deals, response],
+                                                        });
+                                                        toast('New Deal added successfully!', { type: 'success' });
+                                                    })
+                                                    .catch((err) => {
+                                                        toast(err, { type: 'error' });
+                                                    });
+                                            })
+                                            .catch((err2) => {
+                                                toast(err2, { type: 'error' });
+                                            });
+                                    } else {
+                                        const request = {
+                                            title,
+                                            description,
+                                            businessPlan,
+                                            company: '654a87cbfe56fb2f739aafba',
+                                            mainImage: mainUrl,
+                                            financial: {
+                                                fundingGoal,
+                                                valuation,
+                                                profit: revenue,
+                                                projections: financialProjections,
+                                            },
+                                            dealStructure: {
+                                                type: investmentType.split(','),
+                                                terms: investmentTerms,
+                                                ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                                            },
+                                            useOfFunds,
+                                            milestones: transactionAndMiletones,
+                                            legalAndCompliance: {
+                                                termsAndConditions,
+                                                securities: securitiesFilings,
+                                                complianceDetails: regulatoryComplianceDetailss,
+                                                attachments,
+                                                risksAndDisclaimers,
+                                                diligenceMaterials: dueDiligenceMaterials,
+                                            },
+                                            investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                                            minMaxInvestmentAmount: {
+                                                min: Number(minInvestmentAmount),
+                                                max: Number(maxInvestmentAmount),
+                                            },
+                                            dealDuration: dealsDuration,
+                                            pastProjects: [],
+                                        };
+                                        console.log('request 1: ', request);
+                                        addDeal(dispatch, request)
+                                            .then((response) => {
+                                                setOpen(false);
+                                                dispatch({
+                                                    type: SET_DEALS,
+                                                    payload: [...deals, response],
+                                                });
+                                                toast('New Deal added successfully!', { type: 'success' });
+                                            })
+                                            .catch((err) => {
+                                                toast(err, { type: 'error' });
+                                            });
+                                    }
+                                });
                         })
                         .catch((err1) => {
                             toast(err1, { type: 'error' });
@@ -316,6 +444,10 @@ export default function DealView() {
 
     const handleRemove = () => {
         handleOpenDeleteModal();
+    };
+
+    const handleDetail = (dealData) => {
+        router(`/deal/${dealData.id}`, { state: dealData });
     };
 
     const handleSort = (event, id) => {
@@ -433,6 +565,7 @@ export default function DealView() {
                                         selected={selected.indexOf(row.title) !== -1}
                                         handleClick={(event) => handleClick(event, row.title)}
                                         handleRemove={handleRemove}
+                                        handleDetail={() => handleDetail(row)}
                                     />
                                 ))}
 
