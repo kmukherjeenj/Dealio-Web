@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -32,7 +32,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 
 import { SET_DEALS } from 'src/redux/types';
-import { addDeal, uploadFiles, uploadToAnalyze } from 'src/api/server';
+import { addDeal, getDeals, removeDeal, uploadFiles, uploadToAnalyze } from 'src/api/server';
 
 import Iconify from 'src/components/iconify';
 import Scrollbar from 'src/components/scrollbar';
@@ -65,6 +65,7 @@ export default function DealView() {
     const deals = useSelector((state) => state.deals);
 
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
+    const [removeId, setRemoveId] = useState(null);
     const [open, setOpen] = useState(false);
     const [page, setPage] = useState(0);
     const [order, setOrder] = useState('asc');
@@ -116,6 +117,14 @@ export default function DealView() {
     const [errMaxInvestmentAmount, setErrMaxInvestmentAmount] = useState(false);
     const [dealsDuration, setDealDuration] = useState('');
     const [errDealDuration, setErrDealDuration] = useState(false);
+
+    useEffect(() => {
+        getDeals(dispatch)
+            .then((res) => {})
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
+    }, [dispatch]);
 
     const onSubmit = () => {
         if (!mainImage) setErrMainImage(true);
@@ -442,13 +451,36 @@ export default function DealView() {
     const handleOpenDeleteModal = () => setOpenDeleteModal(true);
     const handleCloseDeleteModal = () => setOpenDeleteModal(false);
 
-    const handleRemove = () => {
+    const handleRemove = (id) => {
+        setRemoveId(id);
         handleOpenDeleteModal();
     };
 
     const handleDetail = (dealData) => {
         router(`/deal/${dealData.id}`, { state: dealData });
     };
+
+    const goRemove = () => {
+        if (removeId) {
+            handleCloseDeleteModal();
+            removeDeal(dispatch, { id: removeId })
+                .then((res) => {
+                    getData();
+                    toast('Successfully deleted a deal', { type: 'success' });
+                })
+                .catch((err) => {
+                    toast(err, { type: 'error' });
+                });
+        }
+    };
+
+    const getData = useCallback(() => {
+        getDeals(dispatch)
+            .then(() => {})
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
+    }, [dispatch]);
 
     const handleSort = (event, id) => {
         const isAsc = orderBy === id && order === 'asc';
@@ -564,7 +596,7 @@ export default function DealView() {
                                         company={row.company.name}
                                         selected={selected.indexOf(row.title) !== -1}
                                         handleClick={(event) => handleClick(event, row.title)}
-                                        handleRemove={handleRemove}
+                                        handleRemove={() => handleRemove(row.id)}
                                         handleDetail={() => handleDetail(row)}
                                     />
                                 ))}
@@ -891,8 +923,10 @@ export default function DealView() {
                     <DialogContentText id="alert-dialog-description">Are you sure you want to remove this deal?</DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleCloseDeleteModal}>Cancle</Button>
-                    <Button onClick={handleCloseDeleteModal} autoFocus>
+                    <Button onClick={handleCloseDeleteModal} sx={{ color: theme.palette.grey[600] }}>
+                        Cancle
+                    </Button>
+                    <Button onClick={goRemove} autoFocus color="error">
                         Delete
                     </Button>
                 </DialogActions>

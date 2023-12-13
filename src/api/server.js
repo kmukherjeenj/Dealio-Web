@@ -144,6 +144,29 @@ export const addDeal = (dispatch, data) =>
             });
     });
 
+export const updateDeal = (dispatch, id, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+        HTTPS.put(`/deals/${id}`, data)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
 export const getUsers = (dispatch) =>
     new Promise((resolve, reject) => {
         dispatch({
@@ -160,6 +183,30 @@ export const getUsers = (dispatch) =>
                 dispatch({
                     type: SET_USERS,
                     payload: res.data,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
+export const removeDeal = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.delete(`/deals/${data.id}`)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
                 });
                 resolve(res.data);
             })

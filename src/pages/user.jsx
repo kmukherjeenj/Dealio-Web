@@ -8,7 +8,7 @@ export default function UserPage() {
     return (
         <>
             <Helmet>
-                <title> User | Deelio </title>
+                <title> Users | Deelio </title>
             </Helmet>
 
             <UserView />

@@ -14,24 +14,85 @@ import { Input, SystemMessage, MessageBox } from 'react-chat-elements';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { Card, Rating, useTheme, Container, IconButton, CardHeader, CardContent, CardActions } from '@mui/material';
+import { Box, Card, Modal, Rating, useTheme, Container, TextField, IconButton, CardHeader, CardContent, CardActions } from '@mui/material';
 
 import { useRouter } from 'src/routes/hooks';
 
 import { bgBlur } from 'src/theme/css';
-import { getChat } from 'src/api/server';
+import { getChat, updateDeal } from 'src/api/server';
 // eslint-disable-next-line import/no-unresolved
+
+import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+
+import { LoadingButton } from '@mui/lab';
 
 import Iconify from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
+const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '96%',
+    maxWidth: 800,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    borderRadius: 2,
+    p: 4,
+};
+
 export default function DealDetailView() {
     const { state } = useLocation();
-    const dealData = state;
+    const dealParam = state;
+    const dispatch = useDispatch();
     const theme = useTheme();
     const router = useRouter();
     const inputReferance = useRef(null);
 
+    const [dealData, setDealData] = useState(null);
+
+    const [title, setTitle] = useState('');
+    const [errTitle, setErrTitle] = useState(false);
+    const [description, setDescription] = useState('');
+    const [errDesc, setErrDesc] = useState(false);
+    const [businessPlan, setBusinessPlan] = useState('');
+    const [errBusinessPlan, setErrBusinessPlan] = useState(false);
+    const [fundingGoal, setFundingGoal] = useState('');
+    const [errFundingGoal, setErrFundingGoal] = useState(false);
+    const [valuation, setValuation] = useState('');
+    const [errValuatin, setErrValuatin] = useState(false);
+    const [revenue, setRevenue] = useState('');
+    const [financialProjections, setFinancialProjections] = useState('');
+    const [investmentType, setInvestmentType] = useState('');
+    const [errInvestmentType, setErrInvestmentType] = useState(false);
+    const [investmentTerms, setInvestmentTerms] = useState('');
+    const [errInvestmentTerms, setErrInvestmentTerms] = useState(false);
+    const [ownershipPercentageOffered, setOwnershipPercentageOffered] = useState('');
+    const [errOwnershipPercentageOffered, setErrOwnershipPercentageOffered] = useState(false);
+    const [useOfFunds, setUseOfFunds] = useState('');
+    const [transactionAndMiletones, setTransactionAndMiletones] = useState('');
+    const [termsAndConditions, setTermsAndConditions] = useState('');
+    const [errTermsAndConditions, setErrTermsAndConditions] = useState(false);
+    const [securitiesFilings, setSecuritiesFilings] = useState('');
+    const [errSecuritiesFilings, setErrSecuritiesFilings] = useState(false);
+    const [regulatoryComplianceDetailss, setRegulatoryComplianceDetails] = useState('');
+    const [errRegulatoryComplianceDetails, setErrRegulatoryComplianceDetails] = useState(false);
+    const [risksAndDisclaimers, setRisksAndDisclaimerss] = useState('');
+    const [errRisksAndDisclaimers, setErrRisksAndDisclaimers] = useState(false);
+    const [dueDiligenceMaterials, setDueDiligenceMaterials] = useState('');
+    const [errDueDiligenceMaterials, setErrDueDiligenceMaterials] = useState(false);
+    const [investorEligibilitys, setInvestorEligibilitys] = useState('');
+    const [errInvestorEligibilitys, setErrInvestorEligibilitys] = useState(false);
+    const [minInvestmentAmount, setMinInvestmentAmount] = useState('');
+    const [errMinInvestmentAmount, setErrMinInvestmentAmount] = useState(false);
+    const [maxInvestmentAmount, setMaxInvestmentAmount] = useState('');
+    const [errMaxInvestmentAmount, setErrMaxInvestmentAmount] = useState(false);
+    const [dealsDuration, setDealDuration] = useState('');
+    const [errDealDuration, setErrDealDuration] = useState(false);
+
+    const [editable, setEditable] = useState(false);
     const [docID, setDocID] = useState(null);
     const [message, setMessage] = useState('');
     const [showChat, setShowChat] = useState(false);
@@ -48,6 +109,35 @@ export default function DealDetailView() {
     ]);
     const [typing, setTyping] = useState(false);
     const [systemError, setSystemError] = useState('');
+
+    useEffect(() => {
+        if (dealParam) {
+            setDealData(dealParam);
+            setTitle(dealParam.title);
+            setDescription(dealParam.description);
+            setBusinessPlan(dealParam.businessPlan);
+            setFundingGoal(dealParam.financial.fundingGoal);
+            setValuation(dealParam.financial.valuation);
+            setRevenue(dealParam.financial.profit);
+            setFinancialProjections(dealParam.financial.projections);
+            setInvestmentType(dealParam.dealStructure.type.join(','));
+            setInvestmentTerms(dealParam.dealStructure.terms);
+            setOwnershipPercentageOffered(dealParam.dealStructure.ownershipPercentageOffered);
+            setUseOfFunds(dealParam.useOfFunds);
+            setTermsAndConditions(dealParam.legalAndCompliance.termsAndConditions);
+            setSecuritiesFilings(dealParam.legalAndCompliance.securities);
+            setRegulatoryComplianceDetails(dealParam.legalAndCompliance.complianceDetails);
+            setRisksAndDisclaimerss(dealParam.legalAndCompliance.risksAndDisclaimers);
+            setDueDiligenceMaterials(dealParam.legalAndCompliance.diligenceMaterials);
+            setInvestorEligibilitys(dealParam.investorEligibilitys ? 'Yes' : 'No');
+            setMinInvestmentAmount(dealParam.minMaxInvestmentAmount.min);
+            setMaxInvestmentAmount(dealParam.minMaxInvestmentAmount.max);
+            setDealDuration(dealParam.dealDuration);
+        }
+    }, [dealParam]);
+
+    const handleOpen = () => setEditable(true);
+    const handleClose = () => setEditable(false);
 
     const handleScroll = () => {
         const position = window.pageYOffset;
@@ -157,6 +247,129 @@ export default function DealDetailView() {
         }
     };
 
+    const handleInvestmentAmount = (e, name) => {
+        if (name === 'min') {
+            if (e.target.value?.includes('$')) {
+                if (!Number.isNaN(e.target.value?.substring(1))) {
+                    setMinInvestmentAmount(Number(e.target.value.substring(1)));
+                }
+            } else if (!Number.isNaN(e.target.value)) {
+                setMinInvestmentAmount(Number(e.target.value));
+            }
+        } else if (e.target.value?.includes('$')) {
+            if (!Number.isNaN(e.target.value?.substring(1))) {
+                setMaxInvestmentAmount(Number(e.target.value.substring(1)));
+            }
+        } else if (!Number.isNaN(e.target.value)) {
+            setMaxInvestmentAmount(Number(e.target.value));
+        }
+    };
+
+    const onSubmit = () => {
+        if (!title) setErrTitle(true);
+        else setErrTitle(false);
+        if (!description) setErrDesc(true);
+        else setErrDesc(false);
+        if (!businessPlan) setErrBusinessPlan(true);
+        else setErrBusinessPlan(false);
+        if (!fundingGoal) setErrFundingGoal(true);
+        else setErrFundingGoal(false);
+        if (!valuation) setErrValuatin(true);
+        else setErrValuatin(false);
+        if (!investmentType) setErrInvestmentType(true);
+        else setErrInvestmentType(false);
+        if (!investmentTerms) setErrInvestmentTerms(true);
+        else setErrInvestmentTerms(false);
+        if (!ownershipPercentageOffered) setErrOwnershipPercentageOffered(true);
+        else setErrOwnershipPercentageOffered(false);
+        if (!termsAndConditions) setErrTermsAndConditions(true);
+        else setErrTermsAndConditions(false);
+        if (!securitiesFilings) setErrSecuritiesFilings(true);
+        else setErrSecuritiesFilings(false);
+        if (!regulatoryComplianceDetailss) setErrRegulatoryComplianceDetails(true);
+        else setErrRegulatoryComplianceDetails(false);
+        if (!risksAndDisclaimers) setErrRisksAndDisclaimers(true);
+        else setErrRisksAndDisclaimers(false);
+        if (!dueDiligenceMaterials) setErrDueDiligenceMaterials(true);
+        else setErrDueDiligenceMaterials(false);
+        if (!investorEligibilitys || (investorEligibilitys.toLowerCase() !== 'yes' && investorEligibilitys.toLowerCase() !== 'no'))
+            setErrInvestorEligibilitys(true);
+        else setErrInvestorEligibilitys(false);
+        if (!minInvestmentAmount || Number(minInvestmentAmount) < 0) setErrMinInvestmentAmount(true);
+        else setErrMinInvestmentAmount(false);
+        if (!maxInvestmentAmount || Number(maxInvestmentAmount) < 0 || minInvestmentAmount > maxInvestmentAmount) setErrMaxInvestmentAmount(true);
+        else setErrMaxInvestmentAmount(false);
+        if (!dealsDuration) setErrDealDuration(true);
+        else setErrDealDuration(false);
+
+        if (
+            !title ||
+            !description ||
+            !businessPlan ||
+            !fundingGoal ||
+            !valuation ||
+            !investmentType ||
+            !investmentTerms ||
+            !ownershipPercentageOffered ||
+            !termsAndConditions ||
+            !securitiesFilings ||
+            !regulatoryComplianceDetailss ||
+            !risksAndDisclaimers ||
+            !dueDiligenceMaterials ||
+            !investorEligibilitys ||
+            !minInvestmentAmount ||
+            !maxInvestmentAmount ||
+            !dealsDuration
+        ) {
+            toast('Please fill all required fields', { type: 'error' });
+        } else {
+            const request = {
+                title,
+                description,
+                businessPlan,
+                company: '654a87cbfe56fb2f739aafba',
+                mainImage: dealData.mainImage,
+                financial: {
+                    fundingGoal,
+                    valuation,
+                    profit: revenue,
+                    projections: financialProjections,
+                },
+                dealStructure: {
+                    type: investmentType.split(','),
+                    terms: investmentTerms,
+                    ownershipPercentageOffered: Number(ownershipPercentageOffered),
+                },
+                useOfFunds,
+                milestones: transactionAndMiletones,
+                legalAndCompliance: {
+                    termsAndConditions,
+                    securities: securitiesFilings,
+                    complianceDetails: regulatoryComplianceDetailss,
+                    attachments: dealData.legalAndCompliance.attachments,
+                    risksAndDisclaimers,
+                    diligenceMaterials: dueDiligenceMaterials,
+                },
+                investorEligibilty: investorEligibilitys.toLowerCase() === 'yes',
+                minMaxInvestmentAmount: {
+                    min: Number(minInvestmentAmount),
+                    max: Number(maxInvestmentAmount),
+                },
+                dealDuration: dealsDuration,
+                pastProjects: dealData.pastProjects,
+            };
+
+            updateDeal(dispatch, dealData.id, request)
+                .then((res) => {
+                    handleClose();
+                    toast('Successfully updated!', { type: 'success' });
+                })
+                .catch((err) => {
+                    toast(err, { type: 'error' });
+                });
+        }
+    };
+
     return (
         <Container>
             <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
@@ -170,7 +383,14 @@ export default function DealDetailView() {
                 >
                     Back
                 </Button>
-                <Typography variant="h5">{` `}</Typography>
+                <Button
+                    variant="contained"
+                    color={editable ? 'success' : 'inherit'}
+                    startIcon={editable ? <Iconify icon="eva:checkmark-fill" /> : <Iconify icon="eva:edit-fill" />}
+                    onClick={handleOpen}
+                >
+                    {editable ? 'Update' : 'Edit'}
+                </Button>
             </Stack>
             <Stack direction="column" position="relative" alignItems="center">
                 <img alt="cover" src={dealData?.mainImage} style={{ width: '100%', height: 540, objectFit: 'cover' }} />
@@ -475,6 +695,241 @@ export default function DealDetailView() {
                     <Iconify icon="eva:message-square-fill" width={46} sx={{ color: theme.palette.primary.main }} />
                 </IconButton>
             </Stack>
+            <Modal open={editable} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+                <Box sx={modalStyle}>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Update Deal
+                    </Typography>
+
+                    <Typography id="modal-modal-description" sx={{ mt: 2, mb: 2 }}>
+                        Please fill all required fields
+                    </Typography>
+                    <Stack spacing={3} pt={2} pb={2} maxHeight={500} overflow="scroll">
+                        <TextField name="title" required label="Title" value={title} error={errTitle} onChange={(e) => setTitle(e.target.value)} />
+                        <TextField
+                            name="description"
+                            required
+                            multiline
+                            rows={4}
+                            label="Description"
+                            error={errDesc}
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder=""
+                        />
+                        <TextField
+                            name="businessPlan"
+                            required
+                            label="Business Plan"
+                            error={errBusinessPlan}
+                            value={businessPlan}
+                            onChange={(e) => setBusinessPlan(e.target.value)}
+                            placeholder="A document outlining the business's strategry, financials, and growth prospects."
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Copy and paste the business plan file link(We do not support file upload function for now)
+                        </Typography>
+                        {/* Dont remove below code this will be added in the future. */}
+                        {/* <Autocomplete
+                            disablePortal
+                            id="combo-box-demo"
+                            options={companies}
+                            sx={{ width: 300 }}
+                            renderInput={(params) => <TextField {...params} label="Company" />}
+                        /> */}
+                        <Typography id="modal-modal-description" sx={{ mt: 2, mb: 2 }}>
+                            Financial Information:
+                        </Typography>
+                        <TextField
+                            name="fundingGoal"
+                            required
+                            label="Funding Goal"
+                            error={errFundingGoal}
+                            value={fundingGoal}
+                            onChange={(e) => setFundingGoal(e.target.value)}
+                        />
+                        <TextField
+                            name="valuation"
+                            required
+                            label="Valuation"
+                            error={errValuatin}
+                            value={valuation}
+                            onChange={(e) => setValuation(e.target.value)}
+                        />
+                        <TextField name="revenue" label="Revenue and Profit/loss history" value={revenue} onChange={(e) => setRevenue(e.target.value)} />
+                        <TextField
+                            name="financialProjections"
+                            label="Financial projections"
+                            value={financialProjections}
+                            onChange={(e) => setFinancialProjections(e.target.value)}
+                        />
+                        <Typography id="modal-modal-description" sx={{ mt: 2, mb: 2 }}>
+                            Deal Structure:
+                        </Typography>
+                        <TextField
+                            name="typeOfInvestment"
+                            required
+                            label="Type of investment"
+                            error={errInvestmentType}
+                            value={investmentType}
+                            onChange={(e) => setInvestmentType(e.target.value)}
+                            placeholder="equity, debt, convertible note, etc."
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Separate by comma
+                        </Typography>
+                        <TextField
+                            name="deelio"
+                            required
+                            multiline
+                            rows={4}
+                            error={errInvestmentTerms}
+                            value={investmentTerms}
+                            onChange={(e) => setInvestmentTerms(e.target.value)}
+                            label="Deelio"
+                        />
+                        <TextField
+                            name="ownershipPercentageOffered"
+                            required
+                            type="number"
+                            error={errOwnershipPercentageOffered}
+                            value={ownershipPercentageOffered}
+                            onChange={(e) => setOwnershipPercentageOffered(e.target.value)}
+                            label="Equity ownership percentage offered"
+                            placeholder="30"
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            e.g., 30 means 30 percentage
+                        </Typography>
+                        <TextField name="useOfFunds" label="Use of Funds" placeholder="" value={useOfFunds} onChange={(e) => setUseOfFunds(e.target.value)} />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Details on how the funds raised will be used to grow the business.
+                        </Typography>
+                        <TextField
+                            name="transactionAndMiletones"
+                            label="Transaction and Miletones"
+                            value={transactionAndMiletones}
+                            onChange={(e) => setTransactionAndMiletones(e.target.value)}
+                            placeholder=""
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            {/* eslint-disable-next-line react/no-unescaped-entities */}
+                            Information about the company's achievements, milestones reached, and future goals.
+                        </Typography>
+                        <Typography id="modal-modal-description" sx={{ mt: 2, mb: 2 }}>
+                            Legal and Compliance:
+                        </Typography>
+                        <TextField
+                            name="termsAndConditions"
+                            required
+                            label="Terms and Conditions"
+                            multiline
+                            rows={4}
+                            error={errTermsAndConditions}
+                            value={termsAndConditions}
+                            onChange={(e) => setTermsAndConditions(e.target.value)}
+                        />
+                        <TextField
+                            name="securitiesFilings"
+                            required
+                            label="Securities Filings"
+                            multiline
+                            rows={4}
+                            error={errSecuritiesFilings}
+                            value={securitiesFilings}
+                            onChange={(e) => setSecuritiesFilings(e.target.value)}
+                        />
+                        <TextField
+                            name="regulatoryComplianceDetails"
+                            required
+                            label="Regulatory compliance details"
+                            multiline
+                            rows={4}
+                            error={errRegulatoryComplianceDetails}
+                            value={regulatoryComplianceDetailss}
+                            onChange={(e) => setRegulatoryComplianceDetails(e.target.value)}
+                        />
+                        <TextField
+                            name="risksAnddisclaimers"
+                            required
+                            label="Risks and Disclaimers"
+                            multiline
+                            rows={4}
+                            placeholder=""
+                            error={errRisksAndDisclaimers}
+                            value={risksAndDisclaimers}
+                            onChange={(e) => setRisksAndDisclaimerss(e.target.value)}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Disclosure of potential risks associated with the investment.
+                        </Typography>
+                        <TextField
+                            name="dueDiligenceMaterials"
+                            required
+                            multiline
+                            rows={4}
+                            label="Due Diligence materials"
+                            error={errDueDiligenceMaterials}
+                            value={dueDiligenceMaterials}
+                            onChange={(e) => setDueDiligenceMaterials(e.target.value)}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Access to additional documents, such as financial reports, legal agreements, and more.
+                        </Typography>
+                        <TextField
+                            name="investorEligibility"
+                            required
+                            label="Investor Eligibility"
+                            placeholder="Yes or No"
+                            error={errInvestorEligibilitys}
+                            value={investorEligibilitys}
+                            onChange={(e) => setInvestorEligibilitys(e.target.value)}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            Yes: for accredited investors, No: for non-accredited investors.
+                        </Typography>
+                        <TextField
+                            name="minInvestmentAmount"
+                            required
+                            label="Minimum Investment Amounts"
+                            placeholder="10000"
+                            error={errMinInvestmentAmount}
+                            value={minInvestmentAmount ? `$ ${minInvestmentAmount}` : ''}
+                            onChange={(e) => handleInvestmentAmount(e, 'min')}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            The minimum amounts that investors can contribute to the deal.
+                        </Typography>
+                        <TextField
+                            name="maxInvestmentAmount"
+                            required
+                            label="Maximum Investment Amounts"
+                            placeholder="$10000"
+                            error={errMaxInvestmentAmount}
+                            value={maxInvestmentAmount ? `$ ${maxInvestmentAmount}` : ''}
+                            onChange={(e) => handleInvestmentAmount(e, 'max')}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            The maximum amounts that investors can contribute to the deal.
+                        </Typography>
+                        <TextField
+                            name="datesOrDealDuration"
+                            required
+                            label="Dates / Deal Duration"
+                            placeholder="3-6 months"
+                            error={errDealDuration}
+                            value={dealsDuration}
+                            onChange={(e) => setDealDuration(e.target.value)}
+                        />
+                        <Typography variant="caption" color={theme.palette.grey[500]} style={{ marginTop: 2 }}>
+                            The timeframe during which the deal is open for investment.
+                        </Typography>
+                        <LoadingButton sx={{ mt: 2 }} onClick={onSubmit}>
+                            Update
+                        </LoadingButton>
+                    </Stack>
+                </Box>
+            </Modal>
         </Container>
     );
 }
