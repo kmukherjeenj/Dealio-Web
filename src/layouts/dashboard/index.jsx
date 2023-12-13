@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Triangle } from 'react-loader-spinner';
 
@@ -15,14 +15,24 @@ export default function DashboardLayout({ children }) {
     const loading = useSelector((state) => state.loading);
     const [openNav, setOpenNav] = useState(false);
 
+    useEffect(() => {
+        if (loading) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+    }, [loading]);
+
     return (
         <>
             <div
                 style={{
                     zIndex: 10000,
-                    width: '100%',
-                    height: '100vh',
-                    position: 'absolute',
+                    position: 'fixed',
+                    bottom: 0,
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     background: '#00000070',
                     display: loading ? 'flex' : 'none',
                     alignItems: 'center',

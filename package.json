@@ -28,6 +28,8 @@
         "@iconify/react": "^4.1.1",
         "@mui/lab": "^5.0.0-alpha.147",
         "@mui/material": "^5.14.12",
+        "@stripe/react-stripe-js": "^2.4.0",
+        "@stripe/stripe-js": "^2.2.1",
         "apexcharts": "^3.43.0",
         "axios": "^1.6.1",
         "date-fns": "^2.30.0",

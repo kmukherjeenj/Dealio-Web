@@ -328,3 +328,104 @@ export const getChat = (docID, message) =>
                 reject(handleError(error));
             });
     });
+
+export const getSignAbility = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.post('/sign/get-sign-ability', data)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
+export const getEnvolope = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+        HTTPS.post('/sign/get-envolope', data)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
+export const initSign = (dispatch, data) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.post('/sign/init', data)
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                resolve(res.data);
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });
+
+export const initTransfer = (dispatch) =>
+    new Promise((resolve, reject) => {
+        dispatch({
+            type: SET_LOADING,
+            payload: true,
+        });
+
+        HTTPS.post('/payment/payment-sheet')
+            .then((res) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                const { paymentIntent, ephemeralKey, customer } = res.data;
+
+                resolve({
+                    paymentIntent,
+                    ephemeralKey,
+                    customer,
+                });
+            })
+            .catch((err) => {
+                dispatch({
+                    type: SET_LOADING,
+                    payload: false,
+                });
+                reject(handleError(err));
+            });
+    });

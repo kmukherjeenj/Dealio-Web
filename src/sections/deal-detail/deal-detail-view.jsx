@@ -19,15 +19,19 @@ import { Box, Card, Modal, Rating, useTheme, Container, TextField, IconButton, C
 import { useRouter } from 'src/routes/hooks';
 
 import { bgBlur } from 'src/theme/css';
-import { getChat, updateDeal } from 'src/api/server';
+import { getChat, initSign, updateDeal, getEnvolope, getSignAbility } from 'src/api/server';
 // eslint-disable-next-line import/no-unresolved
 
 import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux';
+// import { useStripe } from '@stripe/react-stripe-js';
+import { useDispatch, useSelector } from 'react-redux';
+// eslint-disable-next-line import/no-extraneous-dependencies, import/no-duplicates
 
 import { LoadingButton } from '@mui/lab';
 
 import Iconify from 'src/components/iconify';
+
+import { StatusText } from './component/status';
 // ----------------------------------------------------------------------
 
 const modalStyle = {
@@ -50,6 +54,10 @@ export default function DealDetailView() {
     const theme = useTheme();
     const router = useRouter();
     const inputReferance = useRef(null);
+    const user = useSelector((stat) => stat.user);
+
+    // const stripe = useStripe();
+    // const elements = useElements();
 
     const [dealData, setDealData] = useState(null);
 
@@ -92,6 +100,10 @@ export default function DealDetailView() {
     const [dealsDuration, setDealDuration] = useState('');
     const [errDealDuration, setErrDealDuration] = useState(false);
 
+    const [docName, setDocName] = useState('');
+    const [signData, setSignData] = useState(null);
+    const [envelopId, setEnvelopId] = useState('');
+    const [showDocList, setShowDocList] = useState(false);
     const [editable, setEditable] = useState(false);
     const [docID, setDocID] = useState(null);
     const [message, setMessage] = useState('');
@@ -135,6 +147,39 @@ export default function DealDetailView() {
             setDealDuration(dealParam.dealDuration);
         }
     }, [dealParam]);
+
+    const openPaymentSheet = async () => {
+        // if (!stripe || !elements) {
+        //     // Stripe.js hasn't yet loaded.
+        //     // Make sure to disable form submission until Stripe.js has loaded.
+        //     return;
+        // }
+        // const { error: submitError } = await elements.submit();
+        // if (submitError) {
+        //     // Show error to your customer
+        //     toast(submitError.message, { type: 'error' });
+        //     return;
+        // }
+        // const { paymentIntent } = await initTransfer(dispatch);
+        // const { error } = await stripe.confirmPayment({
+        //     elements,
+        //     clientSecret: paymentIntent,
+        //     confirmParams: {
+        //         return_url: window.location.href,
+        //     },
+        // });
+        // if (error) {
+        //     // This point will only be reached if there is an immediate error when
+        //     // confirming the payment. Show error to your customer (for example, payment
+        //     // details incomplete)
+        //     toast(error.message, { type: 'error' });
+        // } else {
+        //     // Your customer will be redirected to your `return_url`. For some payment
+        //     // methods like iDEAL, your customer will be redirected to an intermediate
+        //     // site first to authorize the payment, then redirected to the `return_url`.
+        //     toast('Payment success!', { type: 'success' });
+        // }
+    };
 
     const handleOpen = () => setEditable(true);
     const handleClose = () => setEditable(false);
@@ -370,6 +415,51 @@ export default function DealDetailView() {
         }
     };
 
+    const goSign = (item) => {
+        getSignAbility(dispatch, { userId: user.id, dealId: dealData.id, docId: item.docID })
+            .then((res) => {
+                if (res.success) {
+                    getEnvolope(dispatch, { envelopeId: res.data.envelopeId, dealId: dealData.id, docId: item.docID, userId: user.id })
+                        .then((resEnvelop) => {
+                            setSignData(resEnvelop.status);
+                            setEnvelopId(res.data.envelopeId);
+                            setDocName(item.name);
+
+                            scrollTo('sign');
+                        })
+                        .catch((errEnvelop) => {
+                            toast(errEnvelop, { type: 'error' });
+                        });
+                } else {
+                    initSign(dispatch, { email: user.email, name: `${user.firstName} ${user.lastName}`, docUrl: item.url })
+                        .then((resInit) => {
+                            if (resInit.success) {
+                                getEnvolope(dispatch, { envelopeId: resInit.envelopeId, dealId: dealData.id, docId: item.docID, userId: user.id })
+                                    .then((resEnvelop) => {
+                                        toast(message.message, { type: 'success' });
+                                        setEnvelopId(resInit.envelopeId);
+                                        setSignData(resEnvelop.status);
+                                        setDocName(item.name);
+
+                                        scrollTo('sign');
+                                    })
+                                    .catch((errEnvelop) => {
+                                        toast(errEnvelop, { type: 'error' });
+                                    });
+                            } else {
+                                toast('Failed to sign', { type: 'error' });
+                            }
+                        })
+                        .catch((errInit) => {
+                            toast(errInit, { type: 'error' });
+                        });
+                }
+            })
+            .catch((err) => {
+                toast(err, { type: 'error' });
+            });
+    };
+
     return (
         <Container>
             <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
@@ -455,61 +545,76 @@ export default function DealDetailView() {
                     p={3}
                     position={sticky ? 'fixed' : 'static'}
                     top={80}
-                    width="100%"
+                    width={sticky ? '76%' : '100%'}
                     zIndex={10}
                     style={{
                         ...bgBlur({
                             color: theme.palette.background.default,
                         }),
                     }}
+                    justifyContent="space-between"
                 >
-                    <Button
-                        variant={fragment === 'deelio' ? 'contained' : 'outlined'}
-                        color={fragment === 'deelio' ? 'primary' : 'inherit'}
-                        startIcon={<Iconify icon="eva:grid-fill" />}
-                        onClick={() => {
-                            scrollTo('deelio');
-                            setFragment('deelio');
-                        }}
-                    >
-                        Deelio
-                    </Button>
-                    <Button
-                        variant={fragment === 'documents' ? 'contained' : 'outlined'}
-                        color={fragment === 'documents' ? 'primary' : 'inherit'}
-                        startIcon={<Iconify icon="eva:file-text-fill" />}
-                        onClick={() => {
-                            scrollTo('documents');
-                            setFragment('documents');
-                        }}
-                        sx={{ ml: 2 }}
-                    >
-                        Documents
-                    </Button>
-                    <Button
-                        variant={fragment === 'location' ? 'contained' : 'outlined'}
-                        color={fragment === 'location' ? 'primary' : 'inherit'}
-                        startIcon={<Iconify icon="eva:map-fill" />}
-                        onClick={() => {
-                            scrollTo('location');
-                            setFragment('location');
-                        }}
-                        sx={{ ml: 2 }}
-                    >
-                        Location
-                    </Button>
-                    <Button
-                        variant={fragment === 'projects' ? 'contained' : 'outlined'}
-                        color={fragment === 'projects' ? 'primary' : 'inherit'}
-                        startIcon={<Iconify icon="eva:image-fill" />}
-                        onClick={() => {
-                            scrollTo('projects');
-                            setFragment('projects');
-                        }}
-                        sx={{ ml: 2 }}
-                    >
-                        Projects
-                    </Button>
+                    <Stack direction="row">
+                        <Button
+                            variant={fragment === 'deelio' ? 'contained' : 'outlined'}
+                            color={fragment === 'deelio' ? 'primary' : 'inherit'}
+                            startIcon={<Iconify icon="eva:grid-fill" />}
+                            onClick={() => {
+                                scrollTo('deelio');
+                                setFragment('deelio');
+                            }}
+                        >
+                            Deelio
+                        </Button>
+                        <Button
+                            variant={fragment === 'documents' ? 'contained' : 'outlined'}
+                            color={fragment === 'documents' ? 'primary' : 'inherit'}
+                            startIcon={<Iconify icon="eva:file-text-fill" />}
+                            onClick={() => {
+                                scrollTo('documents');
+                                setFragment('documents');
+                            }}
+                            sx={{ ml: 2 }}
+                        >
+                            Documents
+                        </Button>
+                        <Button
+                            variant={fragment === 'location' ? 'contained' : 'outlined'}
+                            color={fragment === 'location' ? 'primary' : 'inherit'}
+                            startIcon={<Iconify icon="eva:map-fill" />}
+                            onClick={() => {
+                                scrollTo('location');
+                                setFragment('location');
+                            }}
+                            sx={{ ml: 2 }}
+                        >
+                            Location
+                        </Button>
+                        <Button
+                            variant={fragment === 'projects' ? 'contained' : 'outlined'}
+                            color={fragment === 'projects' ? 'primary' : 'inherit'}
+                            startIcon={<Iconify icon="eva:image-fill" />}
+                            onClick={() => {
+                                scrollTo('projects');
+                                setFragment('projects');
+                            }}
+                            sx={{ ml: 2 }}
+                        >
+                            Projects
+                        </Button>
+                    </Stack>
+                    <Stack>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<Iconify icon="eva:activity-fill" />}
+                            onClick={() => {
+                                setShowDocList(true);
+                            }}
+                        >
+                            Sign documents
+                        </Button>
+                    </Stack>
                 </Stack>
                 <Stack id="deelio" mt={sticky ? 14.5 : 4}>
                     <Card>
@@ -586,6 +691,69 @@ export default function DealDetailView() {
                         </CardContent>
                     </Card>
                 </Stack>
+                {signData && (
+                    <Stack id="sign" mt={4}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h5" mb={2}>
+                                    Signature
+                                </Typography>
+                                <Typography variant="body2" mb={1}>
+                                    {envelopId}
+                                </Typography>
+                                <Stack height={380} width="100%">
+                                    <Typography variant="body1" mb={1} mt={1.5} color={theme.palette.primary.main}>
+                                        Document
+                                    </Typography>
+                                    <Typography variant="body2" mb={2}>
+                                        {docName}
+                                    </Typography>
+                                    <Typography variant="body1" mb={1} mt={1.5} color={theme.palette.primary.main}>
+                                        Status
+                                    </Typography>
+                                    <Stack direction="row" alignItems="center">
+                                        <Typography variant="caption" mr={2}>
+                                            Status
+                                        </Typography>
+                                        <StatusText value={signData.status} />
+                                    </Stack>
+                                    <Stack direction="row" alignItems="center" mt={1}>
+                                        <Typography variant="caption" mr={2}>
+                                            Sent Time
+                                        </Typography>
+                                        <Typography variant="body2">{new Date(signData.sentDateTime).toLocaleString()}</Typography>
+                                    </Stack>
+                                    <Stack direction="row" alignItems="center" mt={1}>
+                                        <Typography variant="caption" mr={2}>
+                                            Updated Time
+                                        </Typography>
+                                        <Typography variant="body2">{new Date(signData.lastModifiedDateTime).toLocaleString()}</Typography>
+                                    </Stack>
+                                    <Typography variant="body1" mb={1} mt={3.5} color={theme.palette.primary.main}>
+                                        Sender
+                                    </Typography>
+                                    <Stack direction="row" alignItems="center" mt={1}>
+                                        <Typography variant="caption" mr={2}>
+                                            Name
+                                        </Typography>
+                                        <Typography variant="body2">{signData.sender.userName}</Typography>
+                                    </Stack>
+                                    <Stack direction="row" alignItems="center" mt={1}>
+                                        <Typography variant="caption" mr={2}>
+                                            Email
+                                        </Typography>
+                                        <Typography variant="body2">{signData.sender.email}</Typography>
+                                    </Stack>
+                                    <Stack mt={4}>
+                                        <Button variant="contained" color="primary" startIcon={<Iconify icon="eva:activity-fill" />} onClick={openPaymentSheet}>
+                                            Pay Now
+                                        </Button>
+                                    </Stack>
+                                </Stack>
+                            </CardContent>
+                        </Card>
+                    </Stack>
+                )}
                 <Card
                     sx={{
                         position: 'fixed',
@@ -927,6 +1095,37 @@ export default function DealDetailView() {
                         <LoadingButton sx={{ mt: 2 }} onClick={onSubmit}>
                             Update
                         </LoadingButton>
+                    </Stack>
+                </Box>
+            </Modal>
+            <Modal
+                open={showDocList}
+                onClose={() => {
+                    setShowDocList(false);
+                }}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <Box sx={modalStyle}>
+                    <Typography id="modal-modal-title" variant="h6" component="h2">
+                        Choose a document to sign
+                    </Typography>
+                    <Stack spacing={3} pt={2} pb={2} maxHeight={500} overflow="scroll">
+                        <Stack direction="column" alignItems="flex-start">
+                            {dealData?.legalAndCompliance?.attachments?.map((item, index) => (
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => {
+                                        setShowDocList(false);
+                                        goSign(item);
+                                    }}
+                                    key={index}
+                                    sx={{ mt: 1, textAlign: 'left' }}
+                                >
+                                    {item.name}
+                                </Button>
+                            ))}
+                        </Stack>
                     </Stack>
                 </Box>
             </Modal>
